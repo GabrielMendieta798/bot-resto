@@ -36,3 +36,9 @@ class Customer(Base):
     "Order",
     back_populates="customer",
     )
+
+    conversation = relationship(
+    "Conversation",
+    back_populates="customer",
+    uselist=False,
+)
