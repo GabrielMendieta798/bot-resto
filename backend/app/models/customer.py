@@ -42,3 +42,8 @@ class Customer(Base):
     back_populates="customer",
     uselist=False,
 )
+
+    reservations = relationship(
+    "Reservation",
+    back_populates="customer",
+)
