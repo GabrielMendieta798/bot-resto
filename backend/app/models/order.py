@@ -97,3 +97,8 @@ class Order(Base):
         back_populates="order",
         cascade="all, delete-orphan",
     )
+
+    customer = relationship(
+    "Customer",
+    back_populates="orders",
+    )
