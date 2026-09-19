@@ -1,7 +1,8 @@
 from datetime import datetime
 
 from sqlalchemy import DateTime, String, func
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
 
 from app.core.database import Base
 
@@ -29,4 +30,9 @@ class Customer(Base):
         DateTime(timezone=True),
         nullable=False,
         server_default=func.now(),
+    )
+
+    orders = relationship(
+    "Order",
+    back_populates="customer",
     )
