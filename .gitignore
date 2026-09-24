@@ -23,3 +23,8 @@ htmlcov/
 dist/
 build/
 *.egg-info/
+
+#other
+openspec/
+instructions.md
+AGENTS.md
