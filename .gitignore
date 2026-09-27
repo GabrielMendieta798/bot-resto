@@ -24,7 +24,15 @@ dist/
 build/
 *.egg-info/
 
-#other
+# Other
 openspec/
 instructions.md
 AGENTS.md
+CLAUDE.md
+AI_README.md
+AI_WORKFLOW.md
+ESTADO.md
+PLAYBOOK.md
+.claude/
+.opencode/
+gitignore-append.txt
