@@ -2,6 +2,7 @@ from datetime import datetime
 from decimal import Decimal
 
 from sqlalchemy import (
+    BigInteger,
     Boolean,
     CheckConstraint,
     DateTime,
@@ -31,6 +32,7 @@ class MenuItem(Base):
     )
 
     id: Mapped[int] = mapped_column(
+        BigInteger,
         primary_key=True
     )
 

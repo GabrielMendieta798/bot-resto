@@ -1,6 +1,7 @@
 from decimal import Decimal
 
 from sqlalchemy import (
+    BigInteger,
     CheckConstraint,
     ForeignKey,
     Integer,
@@ -27,10 +28,12 @@ class OrderItem(Base):
     )
 
     id: Mapped[int] = mapped_column(
+        BigInteger,
         primary_key=True
     )
 
     order_id: Mapped[int] = mapped_column(
+        BigInteger,
         ForeignKey(
             "orders.id",
             ondelete="CASCADE",
@@ -40,6 +43,7 @@ class OrderItem(Base):
     )
 
     menu_item_id: Mapped[int] = mapped_column(
+        BigInteger,
         ForeignKey("menu_items.id"),
         nullable=False,
     )

@@ -1,6 +1,7 @@
 from datetime import datetime
 
 from sqlalchemy import (
+    BigInteger,
     Boolean,
     CheckConstraint,
     DateTime,
@@ -27,10 +28,12 @@ class Conversation(Base):
     )
 
     id: Mapped[int] = mapped_column(
+        BigInteger,
         primary_key=True
     )
 
     customer_id: Mapped[int] = mapped_column(
+        BigInteger,
         ForeignKey(
             "customers.id",
             ondelete="CASCADE",
@@ -51,6 +54,7 @@ class Conversation(Base):
     )
 
     current_order_id: Mapped[int | None] = mapped_column(
+        BigInteger,
         ForeignKey(
             "orders.id",
             ondelete="SET NULL",

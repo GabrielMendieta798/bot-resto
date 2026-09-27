@@ -1,6 +1,7 @@
 from datetime import date, datetime, time
 
 from sqlalchemy import (
+    BigInteger,
     CheckConstraint,
     Date,
     DateTime,
@@ -37,10 +38,12 @@ class Reservation(Base):
     )
 
     id: Mapped[int] = mapped_column(
+        BigInteger,
         primary_key=True
     )
 
     customer_id: Mapped[int] = mapped_column(
+        BigInteger,
         ForeignKey("customers.id"),
         nullable=False,
         index=True,
