@@ -25,9 +25,6 @@ build/
 *.egg-info/
 
 # Other
-openspec/
-instructions.md
-AGENTS.md
 CLAUDE.md
 AI_README.md
 AI_WORKFLOW.md
