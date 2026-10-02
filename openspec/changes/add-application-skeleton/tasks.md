@@ -26,51 +26,54 @@ pytest joins from group 2 onwards.
 
 ## 2. Exceptions and logging
 
-- [ ] 2.1 Write `core/exceptions.py`: the hierarchy of design D5 with `code`,
+- [x] 2.1 Write `core/exceptions.py`: the hierarchy of design D5 with `code`,
   `message_key`, optional `field`, and the registry of message keys. No
   FastAPI import.
-- [ ] 2.2 Write `core/logging.py`: JSON formatter, phone masking filter on the
+- [x] 2.2 Write `core/logging.py`: JSON formatter, phone masking filter on the
   root handler, idempotent `configure_logging`.
-- [ ] 2.3 Unit tests for `structured-logging`: record shape, level filtering,
+- [x] 2.3 Unit tests for `structured-logging`: record shape, level filtering,
   phone in message, formatted E.164, structured field, exception stacktrace,
   short numbers untouched.
 
 ## 3. Configuration
 
-- [ ] 3.1 Create `config/restaurant.yaml` with documented defaults for every
+- [x] 3.1 Create `config/restaurant.yaml` with documented defaults for every
   `GEN-7` value and the header about the five owner questions.
-- [ ] 3.2 Create `config/http_errors.yaml` with one text per key in the D5
-  registry, and `config/messages.yaml` with its header and no internal text.
-- [ ] 3.3 Rewrite `core/config.py`: `Settings`, `RestaurantConfig`,
+- [x] 3.2 Create `config/http_errors.yaml` with one text per key in the D5
+  registry, and `config/messages.yaml` with only a comment header (what goes
+  there, that internal errors live in `http_errors.yaml`, that copy arrives
+  with the conversation changes).
+- [x] 3.3 Rewrite `core/config.py`: `Settings`, `RestaurantConfig`,
   `MessagesConfig`, `HttpErrorsConfig`, `load_config`, cached `get_config`, `ConfigError` raised
   `from None`, lazy `settings` attribute for Alembic.
-- [ ] 3.4 Add the startup check that every registered error text key exists
+- [x] 3.4 Add the startup check that every registered error text key exists
   in `http_errors.yaml`.
-- [ ] 3.5 Rewrite `.env.example` with every settings key and no real value.
-- [ ] 3.6 Unit tests for `runtime-configuration`: missing env key, missing YAML
+- [x] 3.5 Rewrite `.env.example` with every settings key and no real value.
+- [x] 3.6 Unit tests for `runtime-configuration`: missing env key, missing YAML
   key, wrong shape, secret never in error (including chained output), unknown
   YAML key, YAML syntax error without snippet, absent file, non-mapping top
   level, committed defaults load, exact decimal fee, unknown time zone, missing
   error text key, committed error texts cover every error type, error section
   in `messages.yaml` rejected, committed `messages.yaml` holds no internal
-  text, `.env.example` keys equal settings keys.
-- [ ] 3.7 Verify `backend/alembic/env.py` still imports `settings` and `Base`
+  text, comments-only `messages.yaml` accepted, comments-only
+  `restaurant.yaml` rejected, absent `messages.yaml` rejected, `.env.example` keys equal settings keys.
+- [x] 3.7 Verify `backend/alembic/env.py` still imports `settings` and `Base`
   unchanged (`alembic check` or an import test), without editing it.
 
 ## 4. Database
 
-- [ ] 4.1 Rewrite `core/database.py`: keep `Base`; add `build_engine` with
+- [x] 4.1 Rewrite `core/database.py`: keep `Base`; add `build_engine` with
   `echo` from settings, `pool_pre_ping`, connect timeout; add
   `build_session_factory`. No engine at import time.
-- [ ] 4.2 Unit tests: echo off by default, on by configuration in development,
+- [x] 4.2 Unit tests: echo off by default, on by configuration in development,
   startup refused with echo in production.
 
 ## 5. Outbound HTTP client
 
-- [ ] 5.1 Write `integrations/http_client.py`: sync httpx client with the four
+- [x] 5.1 Write `integrations/http_client.py`: sync httpx client with the four
   explicit timeouts, translation to `OutboundTimeoutError` /
   `OutboundHttpError` with method and host only.
-- [ ] 5.2 Unit tests for `outbound-http-client`: timeouts equal configuration,
+- [x] 5.2 Unit tests for `outbound-http-client`: timeouts equal configuration,
   silent loopback server raises in under 5 s, error message has no headers,
   body or query, closed client refuses requests, module has no WhatsApp
   reference.

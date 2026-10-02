@@ -1,0 +1,13 @@
+# messages.yaml — textos que ve el cliente en WhatsApp.
+#
+# Este archivo es de esta instancia del restaurante: acá se cambia la redacción
+# o los emojis de lo que el bot le dice al cliente, sin tocar código (TXT-2).
+# Cada texto se identifica por una clave en inglés y su valor va en castellano
+# (TXT-1).
+#
+# Los mensajes de error internos de la aplicación NO van acá: viven en
+# http_errors.yaml.
+#
+# Por ahora está vacío a propósito: los textos llegan con los changes de
+# conversación. La app valida este archivo al arrancar; una clave que el código
+# no conoce no deja levantar la app.

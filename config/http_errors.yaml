@@ -1,0 +1,15 @@
+# http_errors.yaml — textos de las respuestas de error HTTP de la aplicación
+# (API-2). Los mantiene el equipo técnico; NO es copy de cara al cliente de
+# WhatsApp (ese vive en messages.yaml).
+#
+# Cada clave corresponde a un tipo de error del código. La app no levanta si
+# falta alguna (TXT-3).
+
+internal_error: Ocurrió un error inesperado. Intentá de nuevo en unos minutos.
+invalid_input: Algún dato enviado no es válido.
+not_authenticated: Tenés que iniciar sesión.
+permission_denied: No tenés permiso para hacer esta acción.
+not_found: No encontramos lo que buscabas.
+conflict: La operación choca con el estado actual. Actualizá y volvé a intentar.
+invalid_state_transition: Ese cambio de estado no está permitido desde el estado actual.
+method_not_allowed: Esa operación no está permitida sobre este recurso.
