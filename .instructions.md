@@ -23,7 +23,7 @@ Identificadores canónicos. El código, la DB y las specs usan **exactamente** e
 
 **`ConversationState`** — `MAIN_MENU` · `HANDOFF` · `POST_ORDER` · `POST_RESERVATION` · los estados de flujo que cada change agregue
 
-**Eventos de dominio** — `OrderReceived` · `ReservationRequested`
+**Eventos de dominio** — `OrderReceived` · `OrderItemsAdded` · `ReservationRequested`
 
 ---
 
@@ -44,13 +44,14 @@ Identificadores canónicos. El código, la DB y las specs usan **exactamente** e
 - **DAT-1** — Las path operations de FastAPI que tocan datos se declaran `def` (no `async def`); FastAPI las corre en su threadpool.
 - **DAT-2** — El acceso a datos de cada módulo va detrás de una capa de repositorio propia. El dominio nunca usa la `Session` de SQLAlchemy directamente.
 - **DAT-3** — SQLAlchemy opera en modo sync. No se introduce async SQLAlchemy ni asyncpg.
-- **DAT-4** — Al confirmar un pedido se persiste `unit_price_snapshot` en cada `OrderItem`. Editar el precio de un `MenuItem` no altera Orders existentes.
+- **DAT-4** — Al confirmar un pedido o una ampliación se persiste `unit_price_snapshot` en cada `OrderItem`. Editar el precio de un `MenuItem` no altera líneas ya confirmadas. Si se vuelve a agregar el mismo producto, se crea una línea nueva para conservar el precio y el momento de cada incorporación.
 - **DAT-5** — Marcar un item agotado togglea `MenuItem.available`; el `MenuItem` nunca se borra.
 - **DAT-6** — Los cambios de esquema van versionados con Alembic. No se modifica el esquema fuera de una migración. No existe ningún `.sql` suelto como fuente del esquema.
 - **DAT-7** — `Order` separa `subtotal`, `delivery_fee` y `total` en campos distintos.
 - **DAT-8** — Todo importe monetario se modela como `Numeric(12,2)` en DB y `Decimal` en Python. Prohibido `float` para dinero, en modelo, en cálculo y en serialización.
 - **DAT-9** — La invariante ORD-6 se garantiza en la DB con un índice único parcial sobre `orders(customer_id)` filtrado por los estados no-terminales, además del chequeo en dominio. No alcanza con validar en código.
 - **DAT-10** — El logging de SQL (`create_engine(echo=...)`) se controla por config y está apagado por default. Nunca encendido en producción: el SQL crudo expone teléfonos y direcciones (§SEC-3).
+- **DAT-11** — Cada `OrderItem` registra `added_at` como `TIMESTAMPTZ` en UTC. `Order` conserva `estimated_kitchen_ready_at` como `TIMESTAMPTZ` en UTC para poder recalcular y auditar la demora comunicada después de una ampliación.
 
 ## CONV — Conversación
 
@@ -60,8 +61,8 @@ Identificadores canónicos. El código, la DB y las specs usan **exactamente** e
 - **CONV-4** — Un input no reconocido en un estado responde el fallback ("no te entendí, elegí una opción") y suma un reintento. Superado el límite de reintentos configurado, deriva a `HANDOFF`.
 - **CONV-5** — Al cerrar `POST_ORDER` o `POST_RESERVATION` se limpian `current_order_id` y `current_reservation_id` de la Conversation.
 - **CONV-6** — El aviso por inactividad y el reset de sesión usan los timeouts definidos en config; no se hardcodean valores. Al resetear se descarta el carrito (es estado conversacional, no un Order).
-- **CONV-7** — El carrito vive en estado conversacional hasta la confirmación. No se persiste como Order antes de UC-07.
-- **CONV-8** — El carrito se almacena en una columna `JSONB` de la fila `Conversation`, para que quede cubierto por el lock de CONV-2 y por el reset de CONV-6. No vive en memoria de proceso ni en una tabla aparte.
+- **CONV-7** — Tanto el carrito inicial como una ampliación en preparación viven en estado conversacional hasta su confirmación explícita. El carrito inicial no se persiste como Order antes de UC-07; una ampliación no modifica el Order existente hasta que el cliente la confirma.
+- **CONV-8** — El carrito inicial o de ampliación se almacena en una columna `JSONB` de la fila `Conversation`, para que quede cubierto por el lock de CONV-2 y por el reset de CONV-6. No vive en memoria de proceso ni en una tabla aparte.
 - **CONV-9** — El orden de adquisición de locks es fijo en todo el sistema: primero el `INSERT` de idempotencia (WA-4), después el `FOR UPDATE` de `Conversation`, después cualquier otro `FOR UPDATE` (Order, Reservation). Nunca en otro orden.
 - **CONV-10** — El `INSERT ... ON CONFLICT` de WA-4 y todo el efecto de dominio del mensaje comparten una **única transacción**: si el procesamiento falla, la marca de idempotencia se revierte con él. Los envíos salientes (WhatsApp, notificación al staff) se disparan **después del commit**, nunca dentro de la transacción.
 
@@ -93,6 +94,7 @@ Identificadores canónicos. El código, la DB y las specs usan **exactamente** e
 - **NOT-6** — El evento de dominio y su recorrido por `StaffNotifier` son obligatorios y testeables desde el change 06, antes de que exista el panel que los muestra. No se saltea el paso "porque todavía no lo lee nadie".
 - **NOT-7** — Cada notificación registra si fue vista. Una notificación ya vista no vuelve a sonar ni a reaparecer, aunque el panel se recargue, se abra en dos dispositivos, o el polling la traiga de nuevo.
 - **NOT-8** — El cuerpo de la notificación del navegador lleva solo el mínimo: tipo de operación, identificador y total. Nunca dirección de entrega, teléfono ni nombre del cliente (`SEC-3`); esos datos se ven dentro del panel, con sesión autenticada.
+- **NOT-9** — Toda ampliación confirmada emite `OrderItemsAdded` después del commit. El adapter del panel la persiste como notificación pendiente para que cocina distinga los productos nuevos de las líneas originales. El evento contiene solo el identificador del pedido, la cantidad de líneas agregadas, el total actualizado y la nueva demora; no contiene PII.
 
 ## ORD — Pedidos
 
@@ -101,14 +103,18 @@ Identificadores canónicos. El código, la DB y las specs usan **exactamente** e
 - **ORD-3** — El staff puede cancelar/marcar fallido (`→ CANCELLED_BY_STAFF`) desde `RECEIVED`, `PREPARING`, `READY` y `ON_THE_WAY`.
 - **ORD-4** — `ON_THE_WAY` aplica solo a `DELIVERY`. En `PICKUP`, el camino válido es `READY → DELIVERED` directo; no se permite `ON_THE_WAY` en un retiro.
 - **ORD-5** — Estados terminales del pedido: `DELIVERED`, `CANCELLED_BY_CUSTOMER`, `CANCELLED_BY_STAFF`. Un estado terminal no tiene transición saliente.
-- **ORD-6** — Un cliente no puede tener más de un Order en estado no-terminal a la vez. Hasta cerrar el actual, no puede iniciar otro. (Garantizado en DB por DAT-9.)
-- **ORD-7** — UC-05 (modificar pedido) permite sumar líneas, restar cantidad y quitar líneas, solo mientras el pedido no está confirmado. Restar hasta cero elimina la línea.
-- **ORD-8** — El Order se crea transaccionalmente en UC-07, tras confirmación explícita del cliente. Un doble-tap del botón confirmar (mismo `message_id`) no crea dos Orders (queda cubierto por WA-4).
+- **ORD-6** — Un cliente no puede tener más de un Order en estado no-terminal a la vez. Hasta cerrar el actual, no puede iniciar otro. Si necesita más productos y el Order está en `RECEIVED` o `PREPARING`, debe ampliar ese mismo pedido según ORD-14 a ORD-17. (Garantizado en DB por DAT-9.)
+- **ORD-7** — UC-05 (modificar carrito) permite sumar líneas, restar cantidad y quitar líneas antes de la confirmación inicial. Restar hasta cero elimina la línea. Después de confirmar el Order no se alteran ni eliminan líneas existentes: solamente pueden agregarse líneas nuevas mediante el flujo de ampliación.
+- **ORD-8** — El Order se crea transaccionalmente en UC-07, tras confirmación explícita del cliente. La ampliación también requiere confirmación explícita. Un doble-tap del botón de confirmación (mismo `message_id`) no crea dos Orders ni aplica dos veces una ampliación (queda cubierto por WA-4).
 - **ORD-9** — Confirmar pedido exige local abierto (UC-13) y, si es `DELIVERY`, zona válida (UC-14).
-- **ORD-10** — Al seleccionar o confirmar un item se re-verifica `MenuItem.available`. Si dejó de estar disponible entre el listado y la acción, se informa al cliente y el item no se agrega ni se confirma.
+- **ORD-10** — Al seleccionar o confirmar un item, tanto en el carrito inicial como en una ampliación, se re-verifica `MenuItem.available`. Si dejó de estar disponible entre el listado y la acción, se informa al cliente y el item no se agrega ni se confirma.
 - **ORD-11** — La transición a `CANCELLED_BY_STAFF` exige un motivo registrado en `cancel_reason`. El aviso al cliente incluye ese motivo.
-- **ORD-12** — El ETA de preparación de un pedido se calcula como el `estimated_time_min` del item más lento del carrito. Si es `DELIVERY`, se le suma el tiempo de entrega de la zona definido en config.
+- **ORD-12** — En la confirmación inicial, `estimated_kitchen_ready_at` se calcula sumando al momento de confirmación el mayor `estimated_time_min` del carrito. Al confirmar una ampliación se calcula un candidato como `momento_de_ampliación + mayor_tiempo_de_las_líneas_nuevas`, y la nueva hora estimada de cocina es el máximo entre la hora ya almacenada y ese candidato. Los tiempos de preparación no se suman entre productos. La demora presentada al cliente es el tiempo restante hasta esa hora; si es `DELIVERY`, se agrega una sola vez el tiempo de entrega de la zona definido en config.
 - **ORD-13** — Una transición de estado inválida (no contemplada en la máquina de estados) se rechaza explícitamente y se registra. Nunca se aplica "por las dudas" ni se ignora en silencio.
+- **ORD-14** — Un Order confirmado acepta ampliaciones solamente en `RECEIVED` o `PREPARING`. El cliente arma las líneas nuevas en el carrito conversacional y, antes de confirmar, recibe el importe adicional, el nuevo total y la demora estimada actualizada. En `READY`, `ON_THE_WAY` o cualquier estado terminal la ampliación se rechaza.
+- **ORD-15** — Confirmar una ampliación bloquea el Order con `SELECT ... FOR UPDATE` y vuelve a validar estado, disponibilidad y precios dentro de la transacción. Si una transición concurrente movió el pedido fuera de `RECEIVED` o `PREPARING`, no se agrega ninguna línea ni se modifica ningún importe y se informa el conflicto al cliente.
+- **ORD-16** — Una ampliación recalcula `subtotal` y `total` con los precios vigentes capturados en las líneas nuevas. Conserva la única `delivery_fee` del Order: ampliar el mismo pedido no cobra un segundo envío.
+- **ORD-17** — Las líneas confirmadas mientras el Order está en `PREPARING` entran inmediatamente a cocina y no pueden cancelarse de manera individual. Antes de la confirmación se informa esta condición al cliente. La ampliación no cambia el estado actual del Order y emite `OrderItemsAdded` según NOT-9.
 
 ## RES — Reservas
 
