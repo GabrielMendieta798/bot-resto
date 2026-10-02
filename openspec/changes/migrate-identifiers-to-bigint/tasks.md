@@ -12,12 +12,17 @@ explicitly approved.
 
 ## 2. Alembic migration
 
-- [ ] 2.1 Generate a new revision without editing the initial migration.
-- [ ] 2.2 Review the conversion order for PK and FK columns.
+- [x] 2.1 Generate a new revision without editing the initial migration.
+- [x] 2.2 Review the conversion order for PK and FK columns.
 - [ ] 2.3 Preserve FK delete actions, PKs, indexes and unique constraints.
 - [ ] 2.4 Verify every table still generates identifiers automatically.
 - [ ] 2.5 Add an explicit range guard before the downgrade to `INTEGER`.
 - [ ] 2.6 Review that downgrade restores only the identifier types changed here.
+
+> Progress note (2026-10-02): the human reports that the generated Alembic
+> upgrade was applied successfully in their environment. Downgrade safety,
+> sequence behavior, preserved constraints and PostgreSQL verification remain
+> pending in the tasks below.
 
 ## 3. Verification
 
