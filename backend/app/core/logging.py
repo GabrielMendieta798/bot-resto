@@ -35,6 +35,10 @@ _HANDLER_NAME = "app.structured"
 # que sus records pasen por el handler del root y salgan enmascarados en JSON.
 _UVICORN_LOGGERS = ("uvicorn", "uvicorn.error", "uvicorn.access")
 
+# A nivel INFO, httpx loguea la URL completa de cada request, query incluida:
+# ahí puede viajar un token (SEC-2). Solo se dejan pasar advertencias y errores.
+_HTTP_LIBRARY_LOGGERS = ("httpx", "httpcore")
+
 _EXCEPTION_FORMATTER = logging.Formatter()
 
 
@@ -143,3 +147,6 @@ def configure_logging(level: str, stream: TextIO | None = None) -> None:
         uvicorn_logger = logging.getLogger(name)
         uvicorn_logger.handlers.clear()
         uvicorn_logger.propagate = True
+
+    for name in _HTTP_LIBRARY_LOGGERS:
+        logging.getLogger(name).setLevel(logging.WARNING)

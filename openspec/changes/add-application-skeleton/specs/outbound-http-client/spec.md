@@ -32,6 +32,18 @@ configuration. No outbound request SHALL run without a finite timeout.
 - **THEN** its message does not contain the request headers, body or query
   string
 
+### Requirement: Outbound requests are not logged with their URL
+
+The system SHALL NOT write the URL, query string or headers of an outbound
+request to the log at the configured application log level.
+
+#### Scenario: Request with a token in the query
+
+- **GIVEN** the log level is INFO
+- **WHEN** the client sends a request to a URL whose query carries
+  `access_token=...`
+- **THEN** no log record contains the token or the query string
+
 ### Requirement: Client lifecycle follows the application
 
 The system SHALL create the shared client when the application starts and

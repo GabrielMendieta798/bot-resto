@@ -263,6 +263,11 @@ pedido ni cantidades.
 `configure_logging(settings)` corre en `create_app()`, y es idempotente (no
 duplica handlers si se llama dos veces, cosa que pasa en tests).
 
+Los loggers `httpx` y `httpcore` quedan en WARNING: a nivel INFO, httpx
+escribe la URL completa de cada request, query string incluida, y por ahí
+puede salir un token (`SEC-2`). Si hace falta observar las llamadas salientes,
+el adapter que las hace loguea método, host y status por su cuenta.
+
 *Alternativa descartada:* `structlog`. Es mejor herramienta, pero es una
 dependencia y un concepto nuevos para resolver algo que la stdlib resuelve en
 cincuenta líneas. Si el change de hardening necesita más, se reevalúa ahí.

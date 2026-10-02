@@ -76,18 +76,18 @@ pytest joins from group 2 onwards.
 - [x] 5.2 Unit tests for `outbound-http-client`: timeouts equal configuration,
   silent loopback server raises in under 5 s, error message has no headers,
   body or query, closed client refuses requests, module has no WhatsApp
-  reference.
+  reference, outbound request URL never logged.
 
 ## 6. Application and HTTP layer
 
-- [ ] 6.1 Write `api/errors.py`: status map resolved by MRO, handlers for
+- [x] 6.1 Write `api/errors.py`: status map resolved by MRO, handlers for
   `AppError`, `RequestValidationError` (400), `StarletteHTTPException` and
   `Exception` (500, stacktrace to log only, path without query).
-- [ ] 6.2 Write `api/webhook.py` and `api/panel.py` as empty routers with
+- [x] 6.2 Write `api/webhook.py` and `api/panel.py` as empty routers with
   disjoint prefixes.
-- [ ] 6.3 Write `api/health.py`: `def` endpoint, `HealthResponse`, bounded
+- [x] 6.3 Write `api/health.py`: `def` endpoint, `HealthResponse`, bounded
   `SELECT 1`, 200/503, error type logged without message.
-- [ ] 6.4 Write `main.py`: `create_app()` loads config, configures logging,
+- [x] 6.4 Write `main.py`: `create_app()` loads config, configures logging,
   builds engine and HTTP client, registers handlers and routers; lifespan
   disposes engine and closes client; `app = create_app()`.
 - [ ] 6.5 Unit tests for `error-contract`: each category to its status and
