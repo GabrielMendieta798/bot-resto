@@ -101,7 +101,11 @@ Tres modelos Pydantic:
 
   `APP_ENV` no tiene default a propósito: si lo tuviera, un deploy que se
   olvida de setearlo quedaría en `development` y el guard de `DAT-10` no
-  serviría. `DATABASE_URL` es `SecretStr`, así su `repr` nunca muestra el valor.
+  serviría. `DATABASE_URL` es `str` con `Field(repr=False)`, así el `repr` de
+  las settings nunca muestra el valor. No es `SecretStr` porque
+  `backend/alembic/env.py` (non-goal) hace `str(settings.database_url)`, y con
+  `SecretStr` eso devolvería `**********`. `env_ignore_empty=True`: una clave
+  vacía (`CLAVE=`, como en `.env.example`) cuenta como no definida.
   Un `model_validator` rechaza `DATABASE_ECHO=true` con `APP_ENV=production`.
   Los timeouts técnicos tienen default en código porque no son valores de
   negocio (`GEN-7` enumera cuáles lo son).
@@ -121,7 +125,11 @@ Tres modelos Pydantic:
   archivo que abre el dueño del local (`TXT-2`) y no tiene que encontrarse con
   textos internos. `extra="forbid"` hace que una sección de errores HTTP puesta
   ahí por error rompa el arranque. Este change no agrega copy; los changes de
-  conversación la suman.
+  conversación la suman. Mientras tanto el archivo tiene solo un encabezado de
+  comentarios (qué va ahí, que los errores internos viven en
+  `http_errors.yaml`, que el copy llega con los changes de conversación).
+  YAML de puros comentarios parsea como `None`; solo para este archivo se lee
+  como mapping vacío. Es más legible para el dueño que un `{}` literal.
 
 - `HttpErrorsConfig` — `http_errors.yaml`. Un texto por cada `message_key` de
   la jerarquía de errores (D5). Lo mantiene el equipo, no el dueño.

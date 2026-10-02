@@ -28,6 +28,8 @@ dev = [
 [tool.ruff]
 target-version = "py312"
 line-length = 88
+# Raíces de import: `app` es first-party aunque los tests vivan fuera de backend/.
+src = ["backend", "tests"]
 extend-exclude = [
     # Migraciones generadas por Alembic. Fuera de alcance de
     # add-application-skeleton; se incorporan cuando un change tome backend/alembic/.

@@ -1,0 +1,65 @@
+# restaurant.yaml — valores de negocio de esta instancia (GEN-7).
+#
+# IMPORTANTE: estos son DEFAULTS DOCUMENTADOS, no valores definitivos. Los
+# valores finales salen de las cinco preguntas al dueño del local (CP-2):
+#   1. zonas de delivery y sus costos
+#   2. ventana y tope de personas de las reservas
+#   3. timeouts del carrito
+#   4. tiempo de escalada de una reserva sin resolver
+#   5. horarios del local, incluido el horario partido
+# No son una decisión técnica: cambiarlos es editar este archivo, sin tocar
+# código. La app valida este archivo al arrancar y no levanta si falta una
+# clave o si un valor tiene la forma equivocada (VAL-4).
+
+# Zona horaria del local. Se usa solo para presentar horas y validar horarios
+# de negocio; todo se persiste en UTC (GEN-6).
+timezone: America/Argentina/Buenos_Aires
+
+# Franjas de atención por día. Horario partido = dos franjas. Lista vacía =
+# cerrado ese día. Formato HH:MM, 24 h. Cada franja cierra el mismo día que
+# abre.
+opening_hours:
+  monday: []
+  tuesday:
+    - { opens: "12:00", closes: "15:30" }
+    - { opens: "20:00", closes: "23:30" }
+  wednesday:
+    - { opens: "12:00", closes: "15:30" }
+    - { opens: "20:00", closes: "23:30" }
+  thursday:
+    - { opens: "12:00", closes: "15:30" }
+    - { opens: "20:00", closes: "23:30" }
+  friday:
+    - { opens: "12:00", closes: "15:30" }
+    - { opens: "20:00", closes: "23:59" }
+  saturday:
+    - { opens: "12:00", closes: "16:00" }
+    - { opens: "20:00", closes: "23:59" }
+  sunday:
+    - { opens: "12:00", closes: "16:00" }
+
+# Zonas de delivery con su costo de envío en pesos. Importe exacto con hasta
+# dos decimales (DAT-8).
+delivery:
+  zones:
+    - { name: Centro, fee: 1500.00 }
+    - { name: Norte, fee: 2500.00 }
+    - { name: Sur, fee: 2500.00 }
+
+cart:
+  # Minutos sin actividad tras los cuales se descarta un carrito sin confirmar.
+  timeout_minutes: 30
+
+conversation:
+  # Minutos sin mensajes tras los cuales se avisa y se reinicia la sesión (CONV-6).
+  inactivity_timeout_minutes: 60
+  # Inputs no reconocidos seguidos antes de derivar a una persona (CONV-4).
+  max_retries: 3
+
+reservations:
+  # Hasta cuántos días hacia adelante se acepta una reserva (RES-2).
+  max_days_ahead: 30
+  # Tope de personas por reserva (RES-2).
+  max_party_size: 12
+  # Minutos sin resolver tras los cuales se avisa "seguimos procesando" (RES-5).
+  escalation_minutes: 30

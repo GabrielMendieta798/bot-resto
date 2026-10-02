@@ -89,10 +89,36 @@ value of any configuration key, present or missing.
 
 ### Requirement: Malformed or absent YAML prevents startup
 
-The system SHALL refuse to start when any of the YAML files is absent, empty,
-unparseable, or does not have a mapping at its top level. The error SHALL name
-the file and, for a parse error, the line and column, without reproducing the
-file content.
+The system SHALL refuse to start when any of the YAML files is absent,
+unparseable, or does not have a mapping at its top level, and when
+`restaurant.yaml` or `http_errors.yaml` is empty. The error SHALL name the file
+and, for a parse error, the line and column, without reproducing the file
+content.
+
+`messages.yaml` is the only exception to the empty rule: while no change has
+added customer copy, a `messages.yaml` with no content (only comments) SHALL
+be accepted as an empty set of texts. It SHALL still be required to exist, and
+an unknown key in it SHALL still prevent startup.
+
+#### Scenario: Comments-only messages file
+
+- **GIVEN** `config/messages.yaml` contains only comments
+- **WHEN** the application starts
+- **THEN** the configuration loads successfully
+
+#### Scenario: Comments-only restaurant file
+
+- **GIVEN** `config/restaurant.yaml` contains only comments
+- **WHEN** the application starts
+- **THEN** the application does not start
+- **AND** the error names `restaurant.yaml`
+
+#### Scenario: Messages file absent
+
+- **GIVEN** `config/messages.yaml` does not exist at the configured path
+- **WHEN** the application starts
+- **THEN** the application does not start
+- **AND** the error names the missing file
 
 #### Scenario: YAML syntax error
 
