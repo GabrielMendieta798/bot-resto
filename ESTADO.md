@@ -2,7 +2,7 @@
 
 Snapshot del proyecto entre sesiones. Se actualiza con la skill `update-estado` al cerrar cada change y cada sesión (`SDD-5`).
 
-**Última actualización:** 03/10/2026 — sesión de apply de `add-application-skeleton` (grupos 1 a 8)
+**Última actualización:** 03/10/2026 — cierre de `add-application-skeleton` (apply completo y archivado)
 
 > **Hueco conocido:** entre el 19/09 y el 02/10 hubo sesiones que no actualizaron este archivo (inicialización de OpenSpec, tres changes propuestos, cuatro migraciones, PRs #15 a #19). Lo de ese período que no se pudo verificar en el repo figura como `ESTADO DESCONOCIDO`.
 
@@ -10,11 +10,11 @@ Snapshot del proyecto entre sesiones. Se actualiza con la skill `update-estado` 
 
 ## Snapshot
 
-Fase actual: **esqueleto de la aplicación implementado y verificado; falta PR final y archivado.** Todavía ningún caso de uso.
+Fase actual: **esqueleto de la aplicación cerrado y archivado.** La app levanta y se puede verificar; todavía ningún caso de uso.
 
-- Repo: `GabrielMendieta798/bot-resto`. Flujo por PR vía `develop` (PRs #15 a #20 mergeados). Ramas `change/<slug>`.
-- OpenSpec inicializado. Changes activos: **4** (`add-application-skeleton`, `add-whatsapp-message-idempotency`, `allow-order-additions`, `migrate-identifiers-to-bigint`). Archivados: **0**. Los nombres no siguen la numeración 00–09 del plan de `AI_WORKFLOW.md`; la correspondencia es `ESTADO DESCONOCIDO`.
-- **`add-application-skeleton`:** todas las tareas de implementación completas. `run-verify` en verde el 03/10 (ruff, format, mypy estricto, 92 tests unitarios, 1 de integración). `@security`: tercera pasada sin medios ni altos. Grupos 1 a 5 y 6.1–6.4 ya commiteados (PRs #20 y commits `1cb45c5`, `c0c80c2`, `b1fe9d3`); 6.5 a 8.9 **sin commitear**.
+- Repo: `GabrielMendieta798/bot-resto`. Flujo por PR vía `develop` (PRs #15 a #23 mergeados; `develop` y `main` en `4bc1c24`). Ramas `change/<slug>`.
+- OpenSpec inicializado. Changes activos: **3** (`add-whatsapp-message-idempotency`, `allow-order-additions`, `migrate-identifiers-to-bigint`). Archivados: **1** (`add-application-skeleton`). Main specs en `openspec/specs/`: 6 capabilities. Los nombres no siguen la numeración 00–09 del plan de `AI_WORKFLOW.md`; la correspondencia es `ESTADO DESCONOCIDO`.
+- **`add-application-skeleton`:** archivado el 03/10 (40/40 tareas). Último `run-verify` en verde el 03/10: ruff, format, mypy estricto, 92 tests unitarios y 1 de integración. `@security`: tercera pasada sin medios ni altos. Llegó a `main` en los PRs #20 a #23.
 - Base local de desarrollo: contenedor `bot-resto-db` (`postgres:16`). Los tests de integración corren contra ella.
 - La app ya levanta: `uv run uvicorn app.main:app` desde `backend/`. Exige `APP_ENV` en el `.env`.
 
@@ -26,13 +26,13 @@ Fase actual: **esqueleto de la aplicación implementado y verificado; falta PR f
 - [x] 7 skills: `run-verify`, `write-tests`, `security-audit`, `add-domain-module`, `add-conv-state`, `migrate-safe`, `update-estado`
 - [x] 3 subagentes read-only: `@security`, `@test-writer`, `@api-explorer`
 - [ ] Playbook de prompts (Fase C) — `PLAYBOOK.md` existe; si la Fase C se dio por cerrada es `ESTADO DESCONOCIDO`
-- [ ] `add-application-skeleton` — implementado y verificado el 03/10; **no se tilda hasta archivarlo**
+- [x] `add-application-skeleton` — archivado el 03/10/2026 (PRs #20 a #23)
 
 ## Próximo paso
 
-1. **Commitear lo pendiente de `add-application-skeleton`** en la rama `change/add-application-skeleton`: tests 6.5–6.6, integración 7.1–7.2, arreglos de `@security` (8.6–8.7), specs, design y tasks actualizados. Abrir el PR 3 contra `develop`, con `run-verify` y `security-audit` sobre el PR.
-2. Tras el merge: `/opsx:archive add-application-skeleton`. Las specs pasan a `openspec/specs/` (seis capabilities).
-3. Retomar los tres changes propuestos: sus tareas de verificación ahora tienen dónde correr (`tests/unit`, `tests/integration`, `run-verify`). El primero que exponga el webhook arrastra las deudas D-12 a D-14.
+1. **Elegir cuál de los tres changes activos sigue** (`add-whatsapp-message-idempotency`, `allow-order-additions`, `migrate-identifiers-to-bigint`). El orden respecto del plan 00–09 (`SDD-6`) es `ESTADO DESCONOCIDO`: confirmarlo antes de arrancar.
+2. Al retomarlo, revisar su `tasks.md`: sus tareas de verificación ahora tienen dónde correr (`tests/unit`, `tests/integration`, `run-verify`). `add-whatsapp-message-idempotency` tiene pendientes 1.3–1.6, 3.1–3.7, 4.1–4.7 y 5.1–5.2; las de migración necesitan la base `bot-resto-db`.
+3. El primer change que exponga el webhook arrastra las deudas D-12 a D-14 (D-14 es Media y va **antes** de exponerlo).
 
 ## Bloqueantes
 
@@ -105,4 +105,6 @@ Fase actual: **esqueleto de la aplicación implementado y verificado; falta PR f
 
 ## Changes archivados
 
-*(ninguno todavía)*
+| Fecha | Change | PRs | Notas |
+|---|---|---|---|
+| 03/10/2026 | `add-application-skeleton` | #20, #21, #22, #23 | En `openspec/changes/archive/2026-10-03-add-application-skeleton/`. Creó las 6 primeras main specs: `application-runtime`, `development-toolchain`, `error-contract`, `outbound-http-client`, `runtime-configuration`, `structured-logging` |
