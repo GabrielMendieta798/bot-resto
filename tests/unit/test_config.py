@@ -288,3 +288,31 @@ def test_env_example_carries_no_real_values() -> None:
     for value in entries.values():
         assert "@" not in value
         assert "://" not in value
+
+
+def test_settings_representation_hides_the_connection_string(
+    config_env: Path,
+) -> None:
+    config = load_config(env_file=None)
+    secret_url = os.environ["DATABASE_URL"]
+
+    for text in (repr(config.settings), str(config.settings), repr(config)):
+        assert secret_url not in text
+        assert "S3cretPassw0rd" not in text
+
+
+def test_yaml_python_tag_constructs_nothing(
+    config_env: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    calls: list[str] = []
+    monkeypatch.setattr("os.system", lambda command: calls.append(command) or 0)
+    (config_env / "restaurant.yaml").write_text(
+        "timezone: !!python/object/apply:os.system ['echo pwned']\n",
+        encoding="utf-8",
+    )
+
+    message = str(_config_error())
+
+    assert calls == []
+    assert "restaurant.yaml: invalid YAML syntax" in message
+    assert "pwned" not in message

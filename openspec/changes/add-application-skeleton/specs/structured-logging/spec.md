@@ -58,7 +58,35 @@ records emitted by third-party libraries through the root logger.
   its stacktrace
 - **THEN** the output does not contain `5491122334455`
 
+#### Scenario: Phone as a key of a structured field
+
+- **WHEN** application code logs a record with a field
+  `retries={"5491122334455": 2}`
+- **THEN** the output does not contain `5491122334455`
+
 #### Scenario: Short numbers are not masked
 
 - **WHEN** application code logs `order 4521 has 3 items`
 - **THEN** the output contains `4521` and `3` unchanged
+
+### Requirement: Exception messages carry no customer data
+
+Code SHALL NOT put customer data (phone number, name, delivery address or
+message body) into the message of an exception it raises. An exception refers
+to a customer, order or reservation by its identifier. Exception messages are
+logged with unexpected errors, and the phone mask is a safety net, not a
+license: it does not cover names, addresses or message bodies (`SEC-3`).
+
+#### Scenario: Raising an error about a customer
+
+- **WHEN** code raises an error about a specific customer, order or
+  reservation
+- **THEN** the exception message identifies it by `customer_id`, `order_id` or
+  `reservation_id`
+- **AND** the message contains no phone number, name, address or message body
+
+#### Scenario: Review of a change that raises errors
+
+- **WHEN** the security audit of a change inspects its `raise` statements
+- **THEN** any exception message built from customer data is reported as a
+  finding

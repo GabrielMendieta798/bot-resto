@@ -63,13 +63,14 @@ def mask_phones(text: str) -> str:
 
 
 def _mask_value(value: object) -> object:
-    if value is None or isinstance(value, bool | float):
+    if value is None or isinstance(value, bool):
         return value
-    if isinstance(value, int):
+    if isinstance(value, int | float):
         masked = mask_phones(str(value))
         return value if masked == str(value) else masked
     if isinstance(value, dict):
-        return {key: _mask_value(item) for key, item in value.items()}
+        # Las claves también: un dict indexado por teléfono es un caso real.
+        return {mask_phones(str(key)): _mask_value(item) for key, item in value.items()}
     if isinstance(value, list | tuple):
         return [_mask_value(item) for item in value]
     return mask_phones(str(value))

@@ -4,8 +4,10 @@ __pycache__/
 .venv/
 venv/
 
-# Environment
+# Environment (SEC-1): cualquier .env*, salvo la plantilla
 .env
+.env.*
+!.env.example
 
 # Testing
 .pytest_cache/

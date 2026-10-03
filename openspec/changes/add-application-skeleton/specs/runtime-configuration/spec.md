@@ -80,6 +80,12 @@ value of any configuration key, present or missing.
 - **THEN** the startup error, including any chained exception printed with it,
   does not contain the `DATABASE_URL` value or the password
 
+#### Scenario: Settings representation hides the connection string
+
+- **WHEN** the loaded settings or the full configuration are converted to text
+  with `repr` or `str`
+- **THEN** the result does not contain the `DATABASE_URL` value
+
 #### Scenario: Unknown key in a YAML file
 
 - **GIVEN** a YAML file contains a key that its model does not declare
@@ -135,6 +141,13 @@ an unknown key in it SHALL still prevent startup.
 - **WHEN** the application starts
 - **THEN** the application does not start
 - **AND** the error names the missing file
+
+#### Scenario: YAML with a language-specific tag
+
+- **GIVEN** a YAML file contains a tag such as `!!python/object/apply`
+- **WHEN** the application starts
+- **THEN** no object is constructed from the tag
+- **AND** the application does not start
 
 #### Scenario: YAML top level is not a mapping
 

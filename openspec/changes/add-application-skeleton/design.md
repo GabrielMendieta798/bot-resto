@@ -151,8 +151,10 @@ traceback. Por eso:
 3. Para YAML se reporta `archivo, línea, columna` desde `problem_mark`; nunca el
    `str()` del error, porque PyYAML incluye un snippet del contenido.
 
-`yaml.safe_load`, nunca `yaml.load`: el loader completo puede instanciar
-objetos arbitrarios.
+`yaml.load` con `_ConfigLoader`, una subclase de `SafeLoader` que solo agrega
+el constructor de `Decimal`; nunca el loader completo, que puede instanciar
+objetos arbitrarios. Los tags `!!python/...` no tienen constructor y fallan
+como YAML inválido.
 
 *Alternativa descartada:* `pydantic-settings` con `YamlConfigSettingsSource`.
 Mezcla entorno y YAML en un solo modelo, lo que permitiría que un secreto
@@ -191,6 +193,10 @@ reinicios.
 `connect_args={"connect_timeout": ...}` toma `HEALTH_DB_TIMEOUT_SECONDS`, y el
 pool usa `pool_pre_ping=True` para no devolver conexiones muertas tras un corte.
 
+`hide_parameters=True`: sin esto, todo error de SQLAlchemy incluye en su texto
+los parámetros de la sentencia (`[parameters: {...}]`), o sea direcciones y
+cuerpos de mensaje apenas haya datos reales (`SEC-3`).
+
 ### D5. Jerarquía de errores y su traducción
 
 `core/exceptions.py` no importa FastAPI ni Starlette (`GEN-1`):
@@ -221,8 +227,8 @@ Handlers registrados:
 |----------------------------------------|-----------|
 | `AppError` y subclases mapeadas        | status del mapa, mensaje de `http_errors.yaml` |
 | `RequestValidationError`               | 400 `invalid_input`, `field` = último elemento de `loc` del primer error |
-| `StarletteHTTPException`               | su status, `code` derivado (`not_found`, `method_not_allowed`, …) |
-| `Exception`                            | 500 `internal_error`, `logger.exception(...)` con método y path |
+| `StarletteHTTPException`               | su status, `code` derivado: 401 `not_authenticated`, 403 `permission_denied`, 404 `not_found`, 405 `method_not_allowed`, 409 `conflict`; otro 4xx `invalid_input` |
+| cualquier otra excepción               | middleware `UnhandledErrorMiddleware`: 500 `internal_error`, un único log |
 
 El mensaje sale de `http_errors.yaml`, nunca de `str(exc)`: el texto de una
 excepción lo escribe un desarrollador para otro desarrollador y puede contener
@@ -233,11 +239,52 @@ de `http_errors.yaml`, para que el archivo no repita un prefijo `errors.` que
 ya está en su nombre. El path se loguea sin query string porque la query del
 webhook de verificación de Meta trae el verify token (`SEC-2`).
 
-Detalle de Starlette a tener en cuenta en los tests: el handler de `Exception`
-lo ejecuta `ServerErrorMiddleware`, que devuelve nuestra respuesta y después
-re-levanta la excepción. Los tests usan `TestClient(app,
-raise_server_exceptions=False)`. Uvicorn además loguea su propio traceback;
-también pasa por el filtro de enmascarado (D6).
+**Errores inesperados: middleware propio, no handler de `Exception`.** Un
+handler registrado para `Exception` lo ejecuta `ServerErrorMiddleware` de
+Starlette, que devuelve nuestra respuesta y después **re-levanta** la
+excepción; uvicorn la atrapa y loguea el traceback completo por segunda vez
+("Exception in ASGI application"), por fuera de nuestro control. Con datos de
+clientes eso es una fuga, no solo ruido (hallazgo medio de `@security`,
+reproducido con uvicorn real). `UnhandledErrorMiddleware` es un middleware ASGI
+puro que se ubica entre `ServerErrorMiddleware` y `ExceptionMiddleware`: atrapa
+lo que los handlers no tradujeron, loguea una vez, responde el 500 uniforme y
+no re-levanta. Si la respuesta ya había empezado a enviarse (streaming) o ya
+terminó (`BackgroundTasks`, el mecanismo natural de "enviar después del
+commit"), no hay 500 posible: loguea una vez y retorna sin re-levantar; el
+servidor cierra la conexión sin volver a loguear la excepción.
+
+Cubre solo lo que corre por dentro. `add_middleware` inserta al principio de la
+pila, así que un middleware agregado después (CORS, sesión del panel en el
+change 08) queda por fuera y sus errores vuelven al camino de
+`ServerErrorMiddleware` + uvicorn. Un test fija que este middleware sea el más
+interno; el change que agregue otro middleware tiene que decidir cómo cubre
+sus errores.
+
+**Qué se loguea de un error inesperado.** Siempre método, path sin query,
+`error_type` y el stack. Para la mayoría de las excepciones, el traceback
+completo con su mensaje (teléfonos enmascarados). Si en la **cadena** de la
+excepción (`__cause__`, y `__context__` salvo que esté suprimido) aparece una
+de estas familias, cuyo texto transporta datos del cliente por construcción,
+no se loguea ningún mensaje de la cadena: solo `error_chain` (los tipos), los
+frames de cada eslabón (`stack`) y metadatos seguros.
+
+- `SQLAlchemyError` entera: además de los parámetros (ya ocultos por
+  `hide_parameters`), el driver agrega `DETAIL: Failing row contains (...)`, y
+  una `PendingRollbackError` repite el error original en su mensaje. Metadatos:
+  `sqlstate` y nombre de constraint.
+- `pydantic.ValidationError`: incluye `input_value`. Va a aparecer cuando el
+  webhook valide a mano el cuerpo crudo después de verificar la firma.
+- `ResponseValidationError` de FastAPI: incluye el `input` rechazado.
+  Metadato: cantidad de errores.
+
+Recorrer la cadena importa porque el patrón más común en un repositorio es
+`except IntegrityError: raise AlgoMasClaro(...)`: sin `from None`, el error del
+driver queda en `__context__` y el traceback lo imprime entero.
+
+Que el resto de los mensajes sí se logueen es una decisión: sin ellos se
+depura a ciegas. Lo que la sostiene es el requirement de `structured-logging`
+"Exception messages carry no customer data": un `raise` no lleva datos del
+cliente en su mensaje, y la auditoría de cada change lo revisa.
 
 *Alternativa descartada:* `status_code` como atributo de clase en cada
 excepción. Es más corto, pero acopla el dominio al transporte HTTP.
@@ -250,8 +297,8 @@ excepción. Es más corto, pero acopla el dominio al transporte HTTP.
   `level`, `logger`, `message`, los `extra` del record y `exc_info` formateado.
 - `PhoneMaskingFilter` instalado en el **handler** del root logger, no en
   loggers individuales, para cubrir también uvicorn, SQLAlchemy y httpx. Actúa
-  sobre el mensaje ya interpolado, sobre los `extra` y sobre el texto del
-  stacktrace.
+  sobre el mensaje ya interpolado, sobre los `extra` (valores y claves, en
+  cualquier nivel de anidamiento) y sobre el texto del stacktrace.
 
 Regla de enmascarado: toda secuencia de 8 o más dígitos, admitiendo `+`
 inicial y separadores (espacio, guion, punto, paréntesis) entre ellos, se
@@ -359,8 +406,11 @@ revisarla al aprobar.**
 - **[El regex no ve teléfonos con menos de 8 dígitos o partidos en dos campos]**
   → Es una red de seguridad, no el control principal: el control es no loguear
   teléfonos. Los changes con PII deben loguear `customer_id`, no el número.
-- **[Doble log del 500]** Nuestro handler y uvicorn loguean el mismo traceback.
-  → Molesto, no inseguro: ambos pasan por el filtro. Se limpia en hardening.
+- **[Handlers ajenos al nuestro]** Un handler que ve el record antes que nuestro
+  filtro escribe sin enmascarar. Pasa con el `StreamHandler` que SQLAlchemy
+  cuelga cuando `DATABASE_ECHO=true`: SQL y parámetros en claro. → Producción
+  está bloqueada por el guard de `DAT-10`; `.env.example` advierte que el echo
+  saca datos personales en claro aun en desarrollo.
 - **[Uvicorn access log con query string]** El access log de uvicorn imprime la
   query completa, y el `GET` de verificación de Meta trae el verify token. Este
   change no tiene ese endpoint. → Queda anotado para el change 00, que debe
