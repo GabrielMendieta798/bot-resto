@@ -76,26 +76,26 @@ pytest joins from group 2 onwards.
 - [x] 5.2 Unit tests for `outbound-http-client`: timeouts equal configuration,
   silent loopback server raises in under 5 s, error message has no headers,
   body or query, closed client refuses requests, module has no WhatsApp
-  reference.
+  reference, outbound request URL never logged.
 
 ## 6. Application and HTTP layer
 
-- [ ] 6.1 Write `api/errors.py`: status map resolved by MRO, handlers for
+- [x] 6.1 Write `api/errors.py`: status map resolved by MRO, handlers for
   `AppError`, `RequestValidationError` (400), `StarletteHTTPException` and
   `Exception` (500, stacktrace to log only, path without query).
-- [ ] 6.2 Write `api/webhook.py` and `api/panel.py` as empty routers with
+- [x] 6.2 Write `api/webhook.py` and `api/panel.py` as empty routers with
   disjoint prefixes.
-- [ ] 6.3 Write `api/health.py`: `def` endpoint, `HealthResponse`, bounded
+- [x] 6.3 Write `api/health.py`: `def` endpoint, `HealthResponse`, bounded
   `SELECT 1`, 200/503, error type logged without message.
-- [ ] 6.4 Write `main.py`: `create_app()` loads config, configures logging,
+- [x] 6.4 Write `main.py`: `create_app()` loads config, configures logging,
   builds engine and HTTP client, registers handlers and routers; lifespan
   disposes engine and closes client; `app = create_app()`.
-- [ ] 6.5 Unit tests for `error-contract`: each category to its status and
+- [x] 6.5 Unit tests for `error-contract`: each category to its status and
   code, field on invalid input, subclass inherits status, 400 instead of 422
   without echoing input, unknown route 404, `POST /health` 405, unexpected
   exception 500 with no internals and stacktrace in the log with masked phone,
   driver error 500.
-- [ ] 6.6 Unit tests for `application-runtime`: invalid config prevents
+- [x] 6.6 Unit tests for `application-runtime`: invalid config prevents
   `create_app`, prefixes disjoint, webhook exposes no panel route, staff path
   under webhook prefix 404, health with unreachable database returns 503 with
   body in bounded time, no internals in either health response, failure log
@@ -103,18 +103,30 @@ pytest joins from group 2 onwards.
 
 ## 7. Integration
 
-- [ ] 7.1 Integration `conftest.py`: session fixture that checks PostgreSQL and
+- [x] 7.1 Integration `conftest.py`: session fixture that checks PostgreSQL and
   calls `pytest.exit` on failure, never skip.
-- [ ] 7.2 Health smoke test against real PostgreSQL: 200, both checks up, no
+- [x] 7.2 Health smoke test against real PostgreSQL: 200, both checks up, no
   internals in the body.
 
 ## 8. Closing
 
-- [ ] 8.1 Full `run-verify` in green, result recorded.
-- [ ] 8.2 Manual check: start the app, remove `APP_ENV` from `.env`, confirm it
+- [x] 8.1 Full `run-verify` in green, result recorded.
+- [x] 8.2 Manual check: start the app, remove `APP_ENV` from `.env`, confirm it
   does not start and the message names the key only.
-- [ ] 8.3 Confirm `backend/app/models/`, `backend/alembic/` and
+- [x] 8.3 Confirm `backend/app/models/`, `backend/alembic/` and
   `idempotency_repository.py` have no diff and no migration was generated.
-- [ ] 8.4 Functional verification scenario by scenario with `@api-explorer`.
-- [ ] 8.5 Update `ESTADO.md` (debts D-6 and D-7 resolved; access-log risk
-  handed to change 00) and the README session log.
+- [x] 8.4 Functional verification scenario by scenario with `@api-explorer`.
+- [x] 8.5 Run `@security` on the whole change before closing (requested in
+  the apply). Result: 0 high, 1 medium, 7 low.
+- [x] 8.6 Fix the medium finding: `hide_parameters=True` on the engine;
+  `UnhandledErrorMiddleware` replaces the `Exception` handler (one log record,
+  uniform 500, exception does not escape the app); `StatementError` and
+  `ResponseValidationError` logged without their message; tests for the
+  integrity-error-with-address scenario and for an arbitrary exception.
+- [x] 8.7 Fix the approved low findings: `.gitignore` covers `.env.*`; mask
+  dict keys in log fields; framework 401/403/409 codes; tests for settings
+  `repr` and for `!!python/...` tags; echo warning in `.env.example`.
+- [x] 8.8 Re-run `run-verify` and `@security`; no medium or high left.
+- [x] 8.9 Update `ESTADO.md` (debts D-6 and D-7 resolved; new debts handed to
+  change 00 and to the Alembic change, each with its rule code) and the
+  README session log.

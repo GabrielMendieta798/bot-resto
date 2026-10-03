@@ -1,6 +1,8 @@
 """Escenarios de la spec `outbound-http-client`."""
 
 import inspect
+import io
+import logging
 import socket
 import time
 from collections.abc import Iterator
@@ -11,6 +13,7 @@ import pytest
 
 from app.core.config import load_config
 from app.core.exceptions import OutboundHttpError, OutboundTimeoutError
+from app.core.logging import configure_logging
 from app.integrations import http_client
 from app.integrations.http_client import OutboundHttpClient
 
@@ -129,3 +132,29 @@ def test_client_module_has_no_channel_coupling() -> None:
 
     for marker in ("whatsapp", "pywa", "facebook.com", "graph.", "wamid"):
         assert marker not in source
+
+
+def test_outbound_request_url_is_not_logged() -> None:
+    root = logging.getLogger()
+    saved_handlers, saved_level = list(root.handlers), root.level
+    saved_library_levels = {
+        name: logging.getLogger(name).level for name in ("httpx", "httpcore")
+    }
+    buffer = io.StringIO()
+    client = _client(httpx.MockTransport(lambda request: httpx.Response(200)))
+    try:
+        configure_logging("INFO", stream=buffer)
+
+        client.request(
+            "GET", "https://api.example.com/v1/send?access_token=query-secret"
+        )
+    finally:
+        client.close()
+        root.handlers[:] = saved_handlers
+        root.setLevel(saved_level)
+        for name, level in saved_library_levels.items():
+            logging.getLogger(name).setLevel(level)
+
+    output = buffer.getvalue()
+    assert "query-secret" not in output
+    assert "access_token" not in output

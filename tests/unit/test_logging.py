@@ -114,3 +114,15 @@ def test_third_party_records_through_root_are_masked(log_output: io.StringIO) ->
     logging.getLogger("uvicorn.error").error("client %s disconnected", PHONE)
 
     assert PHONE not in log_output.getvalue()
+
+
+def test_phone_as_key_of_structured_field_is_masked(log_output: io.StringIO) -> None:
+    logging.getLogger("app.test").info("retries", extra={"retries": {PHONE: 2}})
+
+    assert PHONE not in log_output.getvalue()
+
+
+def test_phone_as_float_field_is_masked(log_output: io.StringIO) -> None:
+    logging.getLogger("app.test").info("inbound", extra={"phone": float(PHONE)})
+
+    assert PHONE not in log_output.getvalue()

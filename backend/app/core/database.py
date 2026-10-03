@@ -24,6 +24,9 @@ def build_engine(settings: Settings) -> Engine:
         echo=settings.database_echo,
         # Descarta conexiones muertas del pool tras un corte de la base.
         pool_pre_ping=True,
+        # Sin esto, el texto de todo error de SQLAlchemy incluye los parámetros
+        # de la sentencia: direcciones y cuerpos de mensaje (SEC-3).
+        hide_parameters=True,
         # libpq acepta segundos enteros: sin esto, una base que no responde
         # cuelga la conexión durante el timeout del sistema operativo.
         connect_args={

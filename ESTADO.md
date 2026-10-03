@@ -2,20 +2,21 @@
 
 Snapshot del proyecto entre sesiones. Se actualiza con la skill `update-estado` al cerrar cada change y cada sesión (`SDD-5`).
 
-**Última actualización:** 19/09/2026 — sesión de armado del andamiaje (Fases A y B)
+**Última actualización:** 03/10/2026 — sesión de apply de `add-application-skeleton` (grupos 1 a 8)
+
+> **Hueco conocido:** entre el 19/09 y el 02/10 hubo sesiones que no actualizaron este archivo (inicialización de OpenSpec, tres changes propuestos, cuatro migraciones, PRs #15 a #19). Lo de ese período que no se pudo verificar en el repo figura como `ESTADO DESCONOCIDO`.
 
 ---
 
 ## Snapshot
 
-Fase actual: **montaje del ecosistema de desarrollo asistido.** Sin código de producto todavía.
+Fase actual: **esqueleto de la aplicación implementado y verificado; falta PR final y archivado.** Todavía ningún caso de uso.
 
-- Diseño cerrado: documento de arquitectura y casos de uso completo (25 CU, 7 ADRs, plan de 10 changes).
-- Governance (Fase A) completa y aprobada.
-- Skills y subagentes (Fase B) generados: 7 skills, 3 subagentes.
-- Repo: `GabrielMendieta798/bot-resto`, commits directos a `main` sin PR. Ya hay código: `core/config.py`, `core/database.py`, y los modelos `Customer`, `MenuItem`, `Order` y `OrderItem`; `conversation.py` y `reservation.py` siguen vacíos. Gabriel trabajó fuera del SDD; `customers` y `menu` se absorben en el change 01 y `orders` en el 02 (`SDD-7`).
-- OpenSpec: **sin inicializar**.
-- Changes: **0 de 10** propuestos.
+- Repo: `GabrielMendieta798/bot-resto`. Flujo por PR vía `develop` (PRs #15 a #20 mergeados). Ramas `change/<slug>`.
+- OpenSpec inicializado. Changes activos: **4** (`add-application-skeleton`, `add-whatsapp-message-idempotency`, `allow-order-additions`, `migrate-identifiers-to-bigint`). Archivados: **0**. Los nombres no siguen la numeración 00–09 del plan de `AI_WORKFLOW.md`; la correspondencia es `ESTADO DESCONOCIDO`.
+- **`add-application-skeleton`:** todas las tareas de implementación completas. `run-verify` en verde el 03/10 (ruff, format, mypy estricto, 92 tests unitarios, 1 de integración). `@security`: tercera pasada sin medios ni altos. Grupos 1 a 5 y 6.1–6.4 ya commiteados (PRs #20 y commits `1cb45c5`, `c0c80c2`, `b1fe9d3`); 6.5 a 8.9 **sin commitear**.
+- Base local de desarrollo: contenedor `bot-resto-db` (`postgres:16`). Los tests de integración corren contra ella.
+- La app ya levanta: `uv run uvicorn app.main:app` desde `backend/`. Exige `APP_ENV` en el `.env`.
 
 ## Hecho
 
@@ -24,19 +25,20 @@ Fase actual: **montaje del ecosistema de desarrollo asistido.** Sin código de p
 - [x] `AGENTS.md`, `CLAUDE.md`, `AI_README.md`, `AI_WORKFLOW.md`, `.opencode/HIERARCHY.md`
 - [x] 7 skills: `run-verify`, `write-tests`, `security-audit`, `add-domain-module`, `add-conv-state`, `migrate-safe`, `update-estado`
 - [x] 3 subagentes read-only: `@security`, `@test-writer`, `@api-explorer`
-- [ ] Playbook de prompts (Fase C)
+- [ ] Playbook de prompts (Fase C) — `PLAYBOOK.md` existe; si la Fase C se dio por cerrada es `ESTADO DESCONOCIDO`
+- [ ] `add-application-skeleton` — implementado y verificado el 03/10; **no se tilda hasta archivarlo**
 
 ## Próximo paso
 
-1. Cerrar la Fase C del andamiaje (playbook de prompts).
-2. Fase 0 del playbook: bootstrap del repo + `openspec init` + sanity check de governance + verificar acceso a los MCPs.
-3. Change `00-walking-skeleton` — propose, **revisión humana de la spec**, apply en Claude Code, auditoría `@security`, PR, merge, archive.
+1. **Commitear lo pendiente de `add-application-skeleton`** en la rama `change/add-application-skeleton`: tests 6.5–6.6, integración 7.1–7.2, arreglos de `@security` (8.6–8.7), specs, design y tasks actualizados. Abrir el PR 3 contra `develop`, con `run-verify` y `security-audit` sobre el PR.
+2. Tras el merge: `/opsx:archive add-application-skeleton`. Las specs pasan a `openspec/specs/` (seis capabilities).
+3. Retomar los tres changes propuestos: sus tareas de verificación ahora tienen dónde correr (`tests/unit`, `tests/integration`, `run-verify`). El primero que exponga el webhook arrastra las deudas D-12 a D-14.
 
 ## Bloqueantes
 
 | # | Qué | Bloquea | Estado |
 |---|---|---|---|
-| B-2 | **CP-2 — 5 preguntas al dueño del local**: zonas de delivery y costos, ventana y tope de reservas, timeouts de carrito, tiempo de escalada de reserva, horarios (incluido el partido). | Valores finales del YAML. **No bloquea código** gracias a `GEN-7`: se arranca con defaults documentados. | 🟡 Mitigado |
+| B-2 | **CP-2 — 5 preguntas al dueño del local**: zonas de delivery y costos, ventana y tope de reservas, timeouts de carrito, tiempo de escalada de reserva, horarios (incluido el partido). | Valores finales del YAML. **No bloquea código** gracias a `GEN-7`: los defaults documentados ya viven en `config/restaurant.yaml` (02/10), con encabezado que remite a estas 5 preguntas. | 🟡 Mitigado |
 | B-3 | **CP-3 — política vigente de ventana de 24 h y templates de Meta.** Define si se puede avisar estado de pedido y confirmar reservas sin template aprobado. Dependencia que rota; hay que verificarla al construir. | Changes `04`, `05`, `08` | 🔴 Abierto |
 | B-4 | **CP-6 — dos claves faltantes en `messages.yaml`**: `pedido_cancelado_staff_push` y `pedido_estado.cancelado`. | Changes `04` y `08` | 🔴 Abierto |
 | ~~B-1~~ | ~~Stack del panel sin definir~~ | — | ✅ Resuelto 19/09 — ver Decisiones |
@@ -45,17 +47,26 @@ Fase actual: **montaje del ecosistema de desarrollo asistido.** Sin código de p
 
 | # | Qué | Severidad |
 |---|---|---|
-| D-1 | `.env` trackeado en un repo público. **Verificado vacío**, sin credenciales reales. Sacarlo del tracking, agregarlo a `.gitignore` y limpiar el historial (`SEC-1`). | Media |
-| D-2 | `.env.example` mal nombrado: `.env .example`, con un espacio. Renombrar y completar con todas las claves requeridas (`SEC-1`). | Baja |
-| D-3 | `database.sql` en la raíz como fuente del esquema. Choca con `DAT-6`. Es insumo de referencia del change 01 y se borra cuando exista la migración inicial. **Le faltan 8 cosas que exige `.instructions.md`**: tabla de idempotencia por `message_id` (`WA-4`), `subtotal`/`delivery_fee` (`DAT-7`), `CANCELLED_BY_STAFF` y `cancel_reason` (`ORD-3`, `ORD-11`), timestamps por transición (`GEN-4`), índice único parcial (`DAT-9`), `current_reservation_id` + carrito JSONB + contador de reintentos (`CONV-5/8/4`), marca de escalada de reserva (`RES-5`), y todo lo de panel y auditoría (`PAN-1/3/4`). | Media |
-| D-4 | Las skills están en `.claude/skills/`. Falta espejarlas en `.opencode/skills/` con contenido idéntico, y lo mismo con los agentes. **Sin sincronización automática: se hace a mano en cada edición.** | Media |
+| ~~D-1~~ | ✅ Parcial, verificado 03/10: `.env` ya no está trackeado (`git ls-files .env` vacío) y está en `.gitignore`, que desde el 03/10 cubre también `.env.*`. La limpieza del historial es `ESTADO DESCONOCIDO`. Original: `.env` trackeado en un repo público. **Verificado vacío**, sin credenciales reales. Sacarlo del tracking, agregarlo a `.gitignore` y limpiar el historial (`SEC-1`). | Media |
+| ~~D-2~~ | ✅ Resuelto, verificado 03/10: `.env.example` bien nombrado y completo (`add-application-skeleton`, con test que lo compara contra las settings). Original: `.env.example` mal nombrado: `.env .example`, con un espacio. Renombrar y completar con todas las claves requeridas (`SEC-1`). | Baja |
+| ~~D-3~~ | ✅ Verificado 03/10: `database.sql` ya no está en el repo y hay 4 migraciones de Alembic. Si las migraciones cubren las 8 faltas listadas es `ESTADO DESCONOCIDO`. Original: `database.sql` en la raíz como fuente del esquema. Choca con `DAT-6`. Es insumo de referencia del change 01 y se borra cuando exista la migración inicial. **Le faltan 8 cosas que exige `.instructions.md`**: tabla de idempotencia por `message_id` (`WA-4`), `subtotal`/`delivery_fee` (`DAT-7`), `CANCELLED_BY_STAFF` y `cancel_reason` (`ORD-3`, `ORD-11`), timestamps por transición (`GEN-4`), índice único parcial (`DAT-9`), `current_reservation_id` + carrito JSONB + contador de reintentos (`CONV-5/8/4`), marca de escalada de reserva (`RES-5`), y todo lo de panel y auditoría (`PAN-1/3/4`). | Media |
+| D-4 | Sigue abierta, verificado 03/10: `diff -rq .claude/skills .opencode/skills` encuentra diferencias (al menos en las skills de OpenSpec). Original: Las skills están en `.claude/skills/`. Falta espejarlas en `.opencode/skills/` con contenido idéntico, y lo mismo con los agentes. **Sin sincronización automática: se hace a mano en cada edición.** | Media |
 | D-5 | El layout del repo (`models/` plano, `core/database.py`) difiere del objetivo de `AGENTS.md` (`domain/<modulo>/`, `db/`). Se reconcilia en el change 01, no antes. | Media |
-| D-6 | `pyproject.toml`: dependencias sin pinear (`SEC-5`), sin ruff, sin mypy, con `pytest-asyncio` que no corresponde al stack sync (`DAT-3`), y `testpaths` apuntando a una carpeta inexistente. Se arregla en P0.2. | Baja |
-| D-7 | `create_engine(echo=True)` loguea todo el SQL, o sea teléfonos y direcciones apenas haya datos reales (`SEC-3`, `DAT-10`). Se arregla en P0.2. | Media |
-| D-8 | **Bug activo:** `models/__init__.py` declara `Order` y `OrderItem` en `__all__` sin importarlos. `Base.metadata` no registra esas tablas, así que el `autogenerate` de Alembic no las ve. Se arregla en el change 02. | Alta |
-| D-9 | **Bug activo:** `Order.customer` usa `back_populates="orders"` y `Customer` no tiene esa relación. `configure_mappers()` falla en la primera query. Todavía no explotó porque no hay tests ni endpoints que consulten. Se arregla en el change 02. | Alta |
+| ~~D-6~~ | ✅ Resuelto 02/10 en `add-application-skeleton` (PR #20): versiones con `==`, `uv.lock` regenerado, ruff, mypy estricto sin overrides, sin `pytest-asyncio`, markers `unit`/`integration`. Original: `pyproject.toml`: dependencias sin pinear (`SEC-5`), sin ruff, sin mypy, con `pytest-asyncio` que no corresponde al stack sync (`DAT-3`), y `testpaths` apuntando a una carpeta inexistente. Se arregla en P0.2. | Baja |
+| ~~D-7~~ | ✅ Resuelto 02/10 en `add-application-skeleton`: `DATABASE_ECHO` apagado por default y prohibido con `APP_ENV=production`; además `hide_parameters=True`. Original: `create_engine(echo=True)` loguea todo el SQL, o sea teléfonos y direcciones apenas haya datos reales (`SEC-3`, `DAT-10`). Se arregla en P0.2. | Media |
+| ~~D-8~~ | ✅ Verificado 03/10: `models/__init__.py` ya importa `Order` y `OrderItem`. En qué change se arregló es `ESTADO DESCONOCIDO`. Original: **Bug activo:** `models/__init__.py` declara `Order` y `OrderItem` en `__all__` sin importarlos. `Base.metadata` no registra esas tablas, así que el `autogenerate` de Alembic no las ve. Se arregla en el change 02. | Alta |
+| D-9 | Verificado 03/10: `Customer` ya tiene la relación `orders`. **Falta confirmar** que `configure_mappers()` no falle (ningún test lo ejercita todavía). Original: **Bug activo:** `Order.customer` usa `back_populates="orders"` y `Customer` no tiene esa relación. `configure_mappers()` falla en la primera query. Todavía no explotó porque no hay tests ni endpoints que consulten. Se arregla en el change 02. | Alta |
 | D-10 | A `Order` le faltan 7 cosas que exige la constitución: `subtotal`/`delivery_fee` (`DAT-7`), los dos estados de cancelación (`ORD-3`, `ORD-5`), `cancel_reason` (`ORD-11`), timestamps por transición (`GEN-4`), el índice único parcial (`DAT-9`), el constraint de `ON_THE_WAY` en retiro (`ORD-4`), y `StrEnum` en Python además del `CHECK`. Todo va en el change 02, listado en su prompt. | Media |
 | D-11 | Riesgo de secuencia: con `Order` y `OrderItem` en `Base.metadata`, el `autogenerate` del change 01 los arrastraría a la migración inicial sin que hayan pasado por spec. Bloqueado explícitamente en el prompt del change 01 y cubierto por su escenario 11. | Media |
+| D-12 | **Para el change que exponga el webhook (00).** El `field` del error 400 refleja la última parte de `loc`: con campos `dict` o modelos `extra="forbid"`, es una clave que mandó el cliente, devuelta sin límite de largo (`API-2`, `VAL-1`). Devolver `field` solo si es un campo declarado. | Baja |
+| D-13 | **Para el change que agregue el adapter de WhatsApp (00).** `OutboundHttpClient` no traduce `httpx.InvalidURL`, `CookieConflict` ni `StreamError`. Y si un adapter llama `raise_for_status()`, la `HTTPStatusError` lleva la URL completa con su query (p. ej. `access_token`) y termina en el log del 500. Prohibir `raise_for_status()` en adapters y ofrecer un chequeo de status en el cliente que levante `OutboundHttpError` con método, host y status (`SEC-2`). | Baja |
+| D-14 | **Para el change que exponga el webhook (00), antes de exponerlo.** El access log de uvicorn imprime la query string completa (verificado: `GET /health?token=abc` aparece entero). El `GET` de verificación de Meta trae `hub.verify_token` en la query (`SEC-2`). Apagar o filtrar el access log. | Media |
+| D-15 | **Para el change que tome `backend/alembic/`.** `env.py` pasa `str(settings.database_url)` a `config.set_main_option`, que interpola con ConfigParser: una contraseña con `%` (así se codifican `@` o `/` en una URL) levanta `ValueError` con la URL completa, contraseña incluida, en el traceback de `alembic upgrade` (`SEC-2`). Pasar `.replace("%", "%%")`. | Baja |
+| D-16 | Si falla el propio logging de un error inesperado, se re-imprime la excepción original entera: `_log_unexpected` corre dentro del `except` (una falla nueva queda encadenada y sale por uvicorn), y `logging.raiseExceptions=True` hace que `handleError` vuelque la cadena en stderr sin enmascarar (`SEC-3`, `API-2`). Sin disparador hoy. Loguear fuera del `except` con fallback de solo `error_type`, y `logging.raiseExceptions=False` o un `handleError` propio. Bajo de la 3.ª pasada de `@security`. | Baja |
+| D-17 | `_exception_chain` (`api/errors.py`) no recorre `BaseExceptionGroup.exceptions`: un grupo con varias excepciones, una de ellas `IntegrityError`, se loguea con `exc_info` completo (`SEC-3`). Sin disparador hoy (no hay task groups). Resolver en el change que introduzca `TaskGroup` o `gather`. Bajo de la 3.ª pasada de `@security`. | Baja |
+| D-18 | **Para el change del panel (08).** `add_middleware` inserta al principio: todo middleware agregado después de `UnhandledErrorMiddleware` (sesión, CSRF, CORS) queda por fuera, y sus errores vuelven a `ServerErrorMiddleware` + uvicorn, con log doble y texto completo (`API-2`, `SEC-3`). Un test fija que `UnhandledErrorMiddleware` sea el más interno. | Baja |
+| D-19 | **Para el change del panel (08).** `/docs` y `/openapi.json` quedan públicos: no exponen datos, pero sí la superficie del panel. Decidir si se apagan en producción. | Baja |
+| D-20 | El `TestClient` de Starlette sobre `httpx` está deprecado (warning en cada corrida de tests); recomienda `httpx2`. Resolver en la próxima actualización de dependencias, pineando la versión (`SEC-5`). | Baja |
 
 ## Decisiones
 
@@ -81,6 +92,16 @@ Fase actual: **montaje del ecosistema de desarrollo asistido.** Sin código de p
 | 19/09 | La reconciliación del layout entra en el change 01, no en la Fase 0 | Mover archivos sin spec es exactamente lo que `SDD-1` prohíbe. La Fase 0 agrega al lado de lo que hay |
 | 19/09 | **El aviso al staff es el propio panel**: el adapter de `StaffNotifier` persiste la notificación, el panel la levanta por polling HTMX y avisa con sonido + notificación del navegador (`NOT-2`, `PAN-9`, `PAN-10`) | Instantáneo, gratis, sin ventana de 24 h ni templates de Meta, sin números extra, y sin acoplar la operación interna del restaurante a la política de precios de Meta, que además encarece utility templates y service messages desde el 1/10/2026. La tablet ya va a estar abierta en la cocina |
 | 19/09 | **Se saca Telegram.** El MVP no tiene canal de notificación externo; `StaffNotifier` queda con un adapter de logging como única implementación (`NOT-2`, `NOT-6`) | Revierte la parte de ADR-05 que elegía canal. La interfaz y el evento de dominio se mantienen: por eso existía el `StaffNotifier`. **Consecuencia abierta: hasta el change 08 el staff no tiene forma de enterarse de un pedido nuevo salvo mirando el panel** |
+| 02/10 | **`GET /health` con la base caída responde 503 con cuerpo**, no 200 | Un monitor u orquestador decide por el código de estado, no por el cuerpo. 503 con cuerpo cumple "no un 500 sin cuerpo" y la distinción app/base vive en el cuerpo. `API-3` no lista 503 pero tampoco lo prohíbe |
+| 02/10 | **Textos de error HTTP en `config/http_errors.yaml`, separados de `messages.yaml`** | `messages.yaml` lo edita el dueño del local (`TXT-2`) y no tiene que toparse con strings internos. Una sección aparte dentro del mismo archivo no lo cumplía |
+| 02/10 | `messages.yaml` con solo comentarios mientras no haya copy; el vacío se acepta **solo** en ese archivo | Más legible para el dueño que un `{}` literal. Archivo ausente o clave desconocida siguen sin dejar levantar la app |
+| 02/10 | **Sin override de mypy para `app.models.*`** | Los modelos pasan estricto tal como están (verificado apagando el override). Una exención que no exime nada solo hace ruido; si un modelo rompe mypy, se decide ahí |
+| 02/10 | `APP_ENV` obligatorio y sin default; `DATABASE_ECHO=true` con `production` no deja arrancar | Con default, un deploy que se olvida de setearlo caería en `development` y el guard de `DAT-10` no serviría |
+| 02/10 | `DATABASE_URL` como `str` con `repr=False`, no `SecretStr` | `backend/alembic/env.py` (non-goal) hace `str(settings.database_url)`; con `SecretStr` devolvería `**********` |
+| 02/10 | Loggers `httpx` y `httpcore` en WARNING | A nivel INFO, httpx loguea la URL completa de cada request saliente, query incluida: ahí puede viajar un token (`SEC-2`). Escenario agregado a la spec con test que falla sin el arreglo |
+| 03/10 | **`UnhandledErrorMiddleware` en lugar del handler de `Exception`** | Con el handler, Starlette re-levanta la excepción y uvicorn la vuelve a loguear completa, con datos del cliente. Reproducido con uvicorn real y un `IntegrityError` con dirección: dos records con la dirección; después del arreglo, uno y sin la dirección |
+| 03/10 | Errores de SQLAlchemy y de validación (en cualquier eslabón de la cadena) se loguean sin mensaje; el resto de las excepciones conserva su mensaje | Sin mensajes se depura a ciegas. Se descartó la alternativa estricta (ningún mensaje) y se agregó a la spec de `structured-logging` el requirement "Exception messages carry no customer data", para que los próximos changes se enteren y `@security` lo revise |
+| 03/10 | Los tests de rutas recorren nuestros routers + el esquema OpenAPI, no `app.routes` | FastAPI 0.142 envuelve los routers incluidos en `_IncludedRouter`, privado; depender de él rompería con cualquier actualización |
 
 ## Changes archivados
 

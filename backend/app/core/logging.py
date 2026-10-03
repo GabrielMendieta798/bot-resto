@@ -35,6 +35,10 @@ _HANDLER_NAME = "app.structured"
 # que sus records pasen por el handler del root y salgan enmascarados en JSON.
 _UVICORN_LOGGERS = ("uvicorn", "uvicorn.error", "uvicorn.access")
 
+# A nivel INFO, httpx loguea la URL completa de cada request, query incluida:
+# ahí puede viajar un token (SEC-2). Solo se dejan pasar advertencias y errores.
+_HTTP_LIBRARY_LOGGERS = ("httpx", "httpcore")
+
 _EXCEPTION_FORMATTER = logging.Formatter()
 
 
@@ -59,13 +63,14 @@ def mask_phones(text: str) -> str:
 
 
 def _mask_value(value: object) -> object:
-    if value is None or isinstance(value, bool | float):
+    if value is None or isinstance(value, bool):
         return value
-    if isinstance(value, int):
+    if isinstance(value, int | float):
         masked = mask_phones(str(value))
         return value if masked == str(value) else masked
     if isinstance(value, dict):
-        return {key: _mask_value(item) for key, item in value.items()}
+        # Las claves también: un dict indexado por teléfono es un caso real.
+        return {mask_phones(str(key)): _mask_value(item) for key, item in value.items()}
     if isinstance(value, list | tuple):
         return [_mask_value(item) for item in value]
     return mask_phones(str(value))
@@ -143,3 +148,6 @@ def configure_logging(level: str, stream: TextIO | None = None) -> None:
         uvicorn_logger = logging.getLogger(name)
         uvicorn_logger.handlers.clear()
         uvicorn_logger.propagate = True
+
+    for name in _HTTP_LIBRARY_LOGGERS:
+        logging.getLogger(name).setLevel(logging.WARNING)

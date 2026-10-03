@@ -42,3 +42,9 @@ def test_echo_in_production_prevents_startup(
 def test_importing_the_module_creates_no_engine() -> None:
     assert not hasattr(database, "engine")
     assert not hasattr(database, "SessionLocal")
+
+
+def test_engine_hides_statement_parameters_in_errors(config_env: Path) -> None:
+    engine = build_engine(load_config(env_file=None).settings)
+
+    assert engine.hide_parameters is True

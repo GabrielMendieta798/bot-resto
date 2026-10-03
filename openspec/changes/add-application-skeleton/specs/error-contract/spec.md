@@ -97,6 +97,14 @@ original status code.
 - **WHEN** a client sends `POST /health`
 - **THEN** the system returns HTTP 405 with the uniform body
 
+#### Scenario: Framework authentication and conflict errors
+
+- **WHEN** the framework or a library raises an HTTP error with status 401,
+  403 or 409
+- **THEN** the code is `not_authenticated`, `permission_denied` or `conflict`
+  respectively
+- **AND** any custom detail of that error is not returned
+
 ### Requirement: Unexpected errors never leak internals
 
 The system SHALL answer any exception outside the mapped categories with HTTP
@@ -120,3 +128,25 @@ with the request method and path but without the query string.
 - **WHEN** a handler lets a database driver error propagate
 - **THEN** the system returns HTTP 500 with code `internal_error`
 - **AND** the response body contains no SQL, table name or driver message
+
+#### Scenario: Any other exception still yields the uniform 500
+
+- **WHEN** a handler raises an arbitrary exception such as `ValueError`
+- **THEN** the system returns HTTP 500 with the uniform body and code
+  `internal_error`
+- **AND** the exception does not escape the application
+
+### Requirement: Unexpected errors are logged once and without customer data
+
+The log of an unexpected error SHALL contain its type and stack frames, and
+SHALL NOT contain SQL parameters, driver row details or rejected input values.
+Each unexpected error SHALL produce exactly one log record.
+
+#### Scenario: Database error carrying customer data
+
+- **WHEN** a handler raises a database integrity error whose parameters and
+  driver detail contain a delivery address
+- **THEN** the system returns HTTP 500 with the uniform body
+- **AND** exactly one log record describes the error, with its type and stack
+  frames
+- **AND** no log record contains the address
