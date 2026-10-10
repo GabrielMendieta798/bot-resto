@@ -94,10 +94,17 @@ y los imports dentro de funciones. Así, un `orders/service.py` que importe la
   la persistencia depende del dominio y no al revés.
 - **El `Protocol` vive en `service.py`.** La interfaz es de quien la consume:
   el servicio declara qué necesita, y el repositorio la cumple
-  estructuralmente, sin heredar ni importar nada del servicio. En los tests de
-  integración, una asignación tipada
-  (`repo: MenuRepository = SqlMenuRepository(session)`) hace que mypy estricto
-  verifique que la implementación cumple el contrato.
+  estructuralmente, sin heredar de ella.
+  - **La conformidad se chequea en el propio módulo del repositorio:**
+    `_x: type[MenuRepository] = SqlMenuRepository`. mypy estricto lo
+    verifica en cada corrida (comprobado el 10/10 con una clase
+    incompatible).
+  - **Por qué no en los tests:** la idea inicial era una asignación tipada
+    dentro de `tests/integration/`. Pero mypy solo revisa `backend/app`
+    (`pyproject.toml`), así que ahí nada la habría chequeado.
+  - **El import del `Protocol` está permitido:** para el chequeo, el
+    repositorio importa el `Protocol` desde `service.py`. Respeta el sentido
+    de la dependencia (`db/` → `domain/`).
 - **Los `__init__.py` quedan vacíos.** Si un `__init__.py` de `db/`
   re-exportara algo y se importara desde el dominio, arrastraría SQLAlchemy.
   El test de "intérprete limpio" (spec `domain-data-boundary`) cubre ese hueco

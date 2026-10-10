@@ -135,59 +135,38 @@ service that is tested against it.
       chain and the captured log (`caplog` plus the JSON handler of
       `configure_logging`).
 
-## 4. Repositories
+## 4. Customer repository
 
-- [ ] 4.1 Write `db/repositories/menu.py` with `SqlMenuRepository(session)`:
-  - the queries of design D6 and D7, using the ORM or parametrized statements
-    only (`SEC-4`);
-  - `UPDATE ... RETURNING` with only the present columns, and the price
-    quantized before writing;
-  - results converted to `MenuItemRead`;
-  - flushing allowed, no transaction control.
+Regrouped on 10/10/2026 at Lautaro's request: each repository ships with its
+integration tests in its own group. The scenarios did not change, only the
+order.
 
-  Its docstring states that the caller owns the transaction.
-- [ ] 4.2 Write `db/repositories/customers.py` with
-  `SqlCustomerRepository(session)`: `INSERT ... ON CONFLICT (phone) DO NOTHING
-  RETURNING`, followed by a `SELECT` only when nothing was returned (design
-  D4). Its docstring states the `read committed` assumption.
-- [ ] 4.3 Confirm that the group 1 boundary tests are still green, and that
-  mypy strict passes on `backend/app/domain` and `backend/app/db` with no
-  `# type: ignore`.
+Protocol conformance: mypy only checks `backend/app` (`pyproject.toml`), so a
+typed assignment in `tests/integration/` would be checked by nothing. The
+check lives in each repository module instead, as
+`_x: type[CustomerRepository] = SqlCustomerRepository`, which is verified on
+10/10 to make mypy fail on an incompatible class.
 
-## 5. Integration tests
-
-- [ ] 5.1 Add to `tests/integration/conftest.py`:
-  - the `db_session` fixture: an outer transaction, a `Session` with
-    `join_transaction_mode="create_savepoint"`, and a rollback at teardown;
-  - a helper that inserts menu items under a unique category per test;
-  - a helper that inserts an `Order` and an `OrderItem` with Core `insert()`
-    (design D8).
-- [ ] 5.2 Write `tests/integration/test_menu_repository.py`:
-  - the typed assignment `repo: MenuRepository = SqlMenuRepository(...)`;
-  - categories, filters and order against PostgreSQL, including the `Ñ` case
-    under `en_US.utf8`;
-  - a sold-out row is still present, queried directly and not through the
-    repository, with every other column unchanged;
-  - a price edit keeps the order line's `unit_price_snapshot` (`DAT-4`);
-  - an edit of only the price leaves the rest unchanged;
-  - price `10000000000.00` and estimated time `2147483648` raise
-    `InvalidInputError` and no database error;
-  - the price comes back as a `Decimal` with exponent `-2`;
-  - `created_at` is aware and in UTC with the session time zone set to
-    `America/Argentina/Buenos_Aires`;
-  - returned values are not ORM instances.
-- [ ] 5.3 Rollback scenarios of `domain-data-boundary`: a price edit and an
-  availability change are undone by `session.rollback()`, and neither change
-  is visible from a second connection before the commit.
-- [ ] 5.4 Write `tests/integration/test_customer_repository.py`:
-  - the typed assignment `repo: CustomerRepository = SqlCustomerRepository(...)`;
-  - creating and then getting again returns the same id, with one row per
-    phone;
-  - a creation undone by `session.rollback()` leaves zero rows;
-  - the first statement sent to `customers` is the `INSERT`, captured with a
-    `before_cursor_execute` listener;
-  - `created_at` is aware and in UTC.
-- [ ] 5.5 Write `tests/integration/test_customer_concurrency.py` (`VER-2`),
+- [x] 4.1 Write `db/repositories/customers.py`, with its tests:
+  - `SqlCustomerRepository(session)`: `INSERT ... ON CONFLICT (phone) DO
+    NOTHING RETURNING`, followed by a `SELECT` only when nothing was returned
+    (design D4); ORM or parametrized statements only (`SEC-4`); flushing
+    allowed, no transaction control. Its docstring states that the caller
+    owns the transaction and the `read committed` assumption.
+  - The module-level conformance check against `CustomerRepository`.
+  - The `db_session` fixture in `tests/integration/conftest.py`: an outer
+    transaction, a `Session` with `join_transaction_mode="create_savepoint"`,
+    and a rollback at teardown (design D8).
+  - `tests/integration/test_customer_repository.py`:
+    - creating and then getting again returns the same id, with one row per
+      phone;
+    - a creation undone by `session.rollback()` leaves zero rows, and it is
+      not visible from a second connection before the commit;
+    - the first statement sent to `customers` is the `INSERT`, captured with
+      a `before_cursor_execute` listener;
+    - `created_at` is aware and in UTC;
+    - returned values are not ORM instances.
+- [ ] 4.2 Write `tests/integration/test_customer_concurrency.py` (`VER-2`),
   using two engines:
   - **Deterministic test:** B is observed waiting on a lock in
     `pg_stat_activity` until A commits, and then returns A's id.
@@ -196,6 +175,39 @@ service that is tested against it.
     commit the same number, ending with one row and one id.
 
   Phones are unique per run, and the teardown deletes them.
+
+## 5. Menu repository
+
+- [ ] 5.1 Write `db/repositories/menu.py`, with its tests:
+  - `SqlMenuRepository(session)`: the queries of design D6 and D7, ORM or
+    parametrized statements only (`SEC-4`); `UPDATE ... RETURNING` with only
+    the present columns and the price quantized before writing; results
+    converted to `MenuItemRead`; flushing allowed, no transaction control.
+    Its docstring states that the caller owns the transaction.
+  - The module-level conformance check against `MenuRepository`.
+  - In `tests/integration/conftest.py`: a helper that inserts menu items
+    under a unique category per test, and one that inserts an `Order` and an
+    `OrderItem` with Core `insert()` (design D8).
+  - `tests/integration/test_menu_repository.py`:
+    - categories, filters and order against PostgreSQL, including the `Ñ`
+      case under `en_US.utf8`;
+    - a sold-out row is still present, queried directly and not through the
+      repository, with every other column unchanged;
+    - a price edit keeps the order line's `unit_price_snapshot` (`DAT-4`);
+    - an edit of only the price leaves the rest unchanged;
+    - price `10000000000.00` and estimated time `2147483648` raise
+      `InvalidInputError` and no database error;
+    - the price comes back as a `Decimal` with exponent `-2`;
+    - `created_at` is aware and in UTC with the session time zone set to
+      `America/Argentina/Buenos_Aires`;
+    - returned values are not ORM instances.
+- [ ] 5.2 Rollback scenarios of `domain-data-boundary` for the menu: a price
+  edit and an availability change are undone by `session.rollback()`; and a
+  customer created and an item edited in one uncommitted transaction are
+  both invisible from a second connection.
+- [ ] 5.3 Confirm that the group 1 boundary tests are still green with both
+  repositories in place, and that mypy strict passes on `backend/app/domain`
+  and `backend/app/db` with no `# type: ignore`.
 
 ## 6. Closing
 
