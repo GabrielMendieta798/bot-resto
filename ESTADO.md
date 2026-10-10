@@ -2,7 +2,7 @@
 
 Snapshot del proyecto entre sesiones. Se actualiza con la skill `update-estado` al cerrar cada change y cada sesión (`SDD-5`).
 
-**Última actualización:** 10/10/2026 — apply completo de `add-menu-and-customer-repositories` (17/17 tareas; falta merge y archive)
+**Última actualización:** 10/10/2026 — `add-menu-and-customer-repositories` completo (17/17 tareas) y archivado en su rama; falta push, PR y merge
 
 > **Hueco conocido:** entre el 19/09 y el 02/10 hubo sesiones que no actualizaron este archivo (inicialización de OpenSpec, tres changes propuestos, cuatro migraciones, PRs #15 a #19). Lo de ese período que no se pudo verificar en el repo figura como `ESTADO DESCONOCIDO`.
 
@@ -10,12 +10,12 @@ Snapshot del proyecto entre sesiones. Se actualiza con la skill `update-estado` 
 
 ## Snapshot
 
-Fase actual: **capa de dominio de menú y customers implementada** (`add-menu-and-customer-repositories`, apply completo el 10/10, sin merge). Existe la capa de datos y servicios de UC-03, UC-17 y UC-18 y la identificación de customers por teléfono; todavía no hay endpoints, pantallas ni guion de WhatsApp que la usen.
+Fase actual: **capa de dominio de menú y customers implementada y archivada** (`add-menu-and-customer-repositories`, archivado el 10/10 en su rama, sin merge). Existe la capa de datos y servicios de UC-03, UC-17 y UC-18 y la identificación de customers por teléfono; todavía no hay endpoints, pantallas ni guion de WhatsApp que la usen.
 
 - Repo: `GabrielMendieta798/bot-resto`. Flujo por PR vía `develop` (PRs #15 a #23 mergeados; `develop` y `main` en `4bc1c24`). Ramas `change/<slug>`.
-- OpenSpec inicializado. Changes activos: **4** (`add-menu-and-customer-repositories` con apply completo; `add-whatsapp-message-idempotency`, `allow-order-additions` y `migrate-identifiers-to-bigint` sin tocar). Archivados: **1** (`add-application-skeleton`). Main specs en `openspec/specs/`: 6 capabilities. Los nombres no siguen la numeración 00–09 del plan de `AI_WORKFLOW.md`; la correspondencia es `ESTADO DESCONOCIDO`.
+- OpenSpec inicializado. Changes activos: **3** (`add-whatsapp-message-idempotency`, `allow-order-additions`, `migrate-identifiers-to-bigint`, sin tocar). Archivados: **2** (`add-application-skeleton`, `add-menu-and-customer-repositories`). Main specs en `openspec/specs/`: 9 capabilities. Los nombres no siguen la numeración 00–09 del plan de `AI_WORKFLOW.md`; la correspondencia es `ESTADO DESCONOCIDO`.
 - **`add-application-skeleton`:** archivado el 03/10 (40/40 tareas). Último `run-verify` en verde el 03/10: ruff, format, mypy estricto, 92 tests unitarios y 1 de integración. `@security`: tercera pasada sin medios ni altos. Llegó a `main` en los PRs #20 a #23.
-- **`add-menu-and-customer-repositories`:** 17/17 tareas el 10/10, en la rama `change/add-menu-and-customer-repositories` (sin push ni PR). Corresponde a `01-cimientos-datos` más la porción `Customer` de `02-pedidos-core`; Lautaro aprobó adelantarlo antes del `00` (`SDD-6`, orden registrado en PENDIENTES). Último `run-verify` en verde el 10/10: ruff, format, mypy estricto (35 archivos), 242 tests unitarios y 34 de integración. Auditoría: `/security-review` y un subagente independiente de solo lectura, 0 altos, 0 medios, 6 bajos (D-24 a D-29).
+- **`add-menu-and-customer-repositories`:** 17/17 tareas y archivado el 10/10, en la rama `change/add-menu-and-customer-repositories` (sin push ni PR). El archive creó las main specs `customer-registry`, `domain-data-boundary` y `menu-catalog`. Corresponde a `01-cimientos-datos` más la porción `Customer` de `02-pedidos-core`; Lautaro aprobó adelantarlo antes del `00` (`SDD-6`, orden registrado en PENDIENTES). Último `run-verify` en verde el 10/10: ruff, format, mypy estricto (35 archivos), 242 tests unitarios y 34 de integración. Auditoría: `/security-review` y un subagente independiente de solo lectura, 0 altos, 0 medios, 6 bajos (D-24 a D-29).
 - **No hay carga inicial del menú:** el alta y la baja de items son non-goal de ese change. Hoy los items solo se insertan a mano o desde fixtures de test.
 - Base local de desarrollo: contenedor `bot-resto-db` (`postgres:16`, puerto 5433, collation `en_US.utf8`). Los tests de integración corren contra ella y no dejan filas. El `.env` local se armó el 10/10 con las variables `POSTGRES_*` del contenedor; no se commitea.
 - La app ya levanta: `uv run uvicorn app.main:app` desde `backend/`. Exige `APP_ENV` en el `.env`.
@@ -29,11 +29,11 @@ Fase actual: **capa de dominio de menú y customers implementada** (`add-menu-an
 - [x] 3 subagentes read-only: `@security`, `@test-writer`, `@api-explorer`
 - [ ] Playbook de prompts (Fase C) — `PLAYBOOK.md` existe; si la Fase C se dio por cerrada es `ESTADO DESCONOCIDO`
 - [x] `add-application-skeleton` — archivado el 03/10/2026 (PRs #20 a #23)
-- [x] `add-menu-and-customer-repositories` — apply completo el 10/10/2026 (falta PR, merge y archive)
+- [x] `add-menu-and-customer-repositories` — archivado el 10/10/2026 en su rama (falta PR y merge)
 
 ## Próximo paso
 
-1. **Cerrar `add-menu-and-customer-repositories`:** push de la rama, PR a `develop`, merge, y después `/opsx:archive` (lo corre Lautaro).
+1. **Cerrar `add-menu-and-customer-repositories`:** push de la rama, PR a `develop` y merge. El archive ya está hecho en la rama, como en `add-application-skeleton`.
 2. **Elegir el próximo change** según el orden registrado en PENDIENTES (`SDD-6`). Changes activos sin tocar: `add-whatsapp-message-idempotency`, `allow-order-additions`, `migrate-identifiers-to-bigint`.
 3. **Antes del change de pedidos:** D-21 (`NOT NULL` de `estimated_time_min`, `ORD-12`) es prerrequisito.
 4. **El primer change que exponga el webhook** arrastra D-12 a D-14 (D-14 es Media y va **antes** de exponerlo), D-25 y D-32.
@@ -134,3 +134,4 @@ Fase actual: **capa de dominio de menú y customers implementada** (`add-menu-an
 | Fecha | Change | PRs | Notas |
 |---|---|---|---|
 | 03/10/2026 | `add-application-skeleton` | #20, #21, #22, #23 | En `openspec/changes/archive/2026-10-03-add-application-skeleton/`. Creó las 6 primeras main specs: `application-runtime`, `development-toolchain`, `error-contract`, `outbound-http-client`, `runtime-configuration`, `structured-logging` |
+| 10/10/2026 | `add-menu-and-customer-repositories` | pendiente | En `openspec/changes/archive/2026-10-10-add-menu-and-customer-repositories/`. Creó las main specs `customer-registry`, `domain-data-boundary` y `menu-catalog`. Archivado en la rama, antes del PR |
