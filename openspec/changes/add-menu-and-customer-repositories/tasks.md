@@ -75,7 +75,7 @@ comes before the service that is tested against it.
     The route is test-only; no endpoint is added to the app.
   - Unit tests for `domain-data-boundary`: building `MenuItemRead` with a
     naive `created_at` fails, and returned objects are frozen.
-- [ ] 2.2 Write `InMemoryMenuRepository` in `tests/unit/domain_fakes.py`,
+- [x] 2.2 Write `InMemoryMenuRepository` in `tests/unit/domain_fakes.py`,
   implementing the same ordering and filters as design D7.
 - [ ] 2.3 Write `domain/menu/service.py`, with its tests:
   - `MenuRepository` `Protocol`, and `MenuService` with `list_categories`,
