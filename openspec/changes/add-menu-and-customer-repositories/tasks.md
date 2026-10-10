@@ -166,7 +166,7 @@ check lives in each repository module instead, as
       a `before_cursor_execute` listener;
     - `created_at` is aware and in UTC;
     - returned values are not ORM instances.
-- [ ] 4.2 Write `tests/integration/test_customer_concurrency.py` (`VER-2`),
+- [x] 4.2 Write `tests/integration/test_customer_concurrency.py` (`VER-2`),
   using two engines:
   - **Deterministic test:** B is observed waiting on a lock in
     `pg_stat_activity` until A commits, and then returns A's id.
