@@ -201,7 +201,7 @@ check lives in each repository module instead, as
     - `created_at` is aware and in UTC with the session time zone set to
       `America/Argentina/Buenos_Aires`;
     - returned values are not ORM instances.
-- [ ] 5.2 Rollback scenarios of `domain-data-boundary` for the menu: a price
+- [x] 5.2 Rollback scenarios of `domain-data-boundary` for the menu: a price
   edit and an availability change are undone by `session.rollback()`; and a
   customer created and an item edited in one uncommitted transaction are
   both invisible from a second connection.
