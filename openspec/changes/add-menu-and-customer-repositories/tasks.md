@@ -9,10 +9,10 @@ scenario (`SDD-2`). `backend/app/models/`, `backend/alembic/`,
 
 ## 1. Package skeleton and boundary checks
 
-- [ ] 1.1 Create the empty packages `backend/app/domain/__init__.py`,
+- [x] 1.1 Create the empty packages `backend/app/domain/__init__.py`,
   `domain/menu/__init__.py`, `domain/customers/__init__.py`,
   `backend/app/db/__init__.py` and `db/repositories/__init__.py` (design D1).
-- [ ] 1.2 Write `tests/unit/test_domain_boundaries.py`:
+- [x] 1.2 Write `tests/unit/test_domain_boundaries.py`:
   - AST check over **every** `.py` under `backend/app/domain/`, discovered by
     walking the package (not a fixed list), that rejects imports of
     `sqlalchemy`, `app.models`, `app.core.database` and `app.db`, whether
