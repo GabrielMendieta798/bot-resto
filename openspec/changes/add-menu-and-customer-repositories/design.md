@@ -431,8 +431,11 @@ available`). Las razones:
 - **`list_categories`:** `SELECT DISTINCT category ... WHERE available
   ORDER BY category`.
 - **Listas de items:** `ORDER BY name, id`. Las dos usan la collation de la
-  base, que para un menú en castellano es la correcta (`Ñoquis` entre `N` y
-  `O`, no después de la `Z` como con `C`). Ver Risks.
+  base. Con `en_US.utf8`, `Ñoquis` queda entre `N` y `O`, no después de la `Z`
+  como con `C`. Corregido en el apply de 5.1: `en_US` trata la Ñ como una N
+  acentuada, así que `Ñoquis` queda **antes** que `Nuez`. Una collation
+  española (`es-AR-x-icu`, disponible en la base) la ordena como letra aparte,
+  después de la N. Ver Risks.
 - **`MenuItemRead`** es un solo schema de salida, con `available`, para las
   dos listas. En la lista del cliente siempre vale `true`, y un segundo schema
   no aporta nada.

@@ -178,7 +178,7 @@ check lives in each repository module instead, as
 
 ## 5. Menu repository
 
-- [ ] 5.1 Write `db/repositories/menu.py`, with its tests:
+- [x] 5.1 Write `db/repositories/menu.py`, with its tests:
   - `SqlMenuRepository(session)`: the queries of design D6 and D7, ORM or
     parametrized statements only (`SEC-4`); `UPDATE ... RETURNING` with only
     the present columns and the price quantized before writing; results
