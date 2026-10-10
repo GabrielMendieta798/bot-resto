@@ -205,7 +205,7 @@ check lives in each repository module instead, as
   edit and an availability change are undone by `session.rollback()`; and a
   customer created and an item edited in one uncommitted transaction are
   both invisible from a second connection.
-- [ ] 5.3 Confirm that the group 1 boundary tests are still green with both
+- [x] 5.3 Confirm that the group 1 boundary tests are still green with both
   repositories in place, and that mypy strict passes on `backend/app/domain`
   and `backend/app/db` with no `# type: ignore`.
 
