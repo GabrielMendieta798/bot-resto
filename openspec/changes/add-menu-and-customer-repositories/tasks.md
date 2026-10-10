@@ -77,7 +77,7 @@ comes before the service that is tested against it.
     naive `created_at` fails, and returned objects are frozen.
 - [x] 2.2 Write `InMemoryMenuRepository` in `tests/unit/domain_fakes.py`,
   implementing the same ordering and filters as design D7.
-- [ ] 2.3 Write `domain/menu/service.py`, with its tests:
+- [x] 2.3 Write `domain/menu/service.py`, with its tests:
   - `MenuRepository` `Protocol`, and `MenuService` with `list_categories`,
     `list_available_items`, `list_all_items`, `get_item`, `set_available` and
     `update_item(item_id, changes: MenuItemUpdate)`.

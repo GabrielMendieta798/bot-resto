@@ -381,9 +381,11 @@ servicio con `re.fullmatch(r"[0-9]{8,15}", phone)` y levanta
 
 ### D6. Edición parcial y disponibilidad
 
-- **Edición parcial.** Después de aplicar las reglas, el servicio arma el
-  diccionario de cambios con
-  `changes.model_dump(include=changes.model_fields_set)`. El repositorio emite
+- **Edición parcial.** Después de aplicar las reglas, el servicio le pasa al
+  repositorio el mismo `MenuItemUpdate` ya validado. Así la interfaz queda
+  tipada; un diccionario de cambios no lo estaría (ajustado en el apply de
+  2.2). El repositorio arma las columnas con
+  `changes.model_dump(include=changes.model_fields_set)` y emite
   `UPDATE menu_items SET <solo esas columnas> WHERE id = :id RETURNING ...`.
   - Las columnas que no vinieron no aparecen en el `SET`. Si dos personas del
     staff editan a la vez el nombre y el precio del mismo plato, ninguna pisa
