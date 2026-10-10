@@ -117,7 +117,7 @@ service that is tested against it.
   - Unit tests: `str` and `repr` of `CustomerRead` hide the phone; a naive
     `created_at` is rejected; `created_at` is normalized to UTC; the object is
     frozen.
-- [ ] 3.2 Write `InMemoryCustomerRepository` in `tests/unit/domain_fakes.py`.
+- [x] 3.2 Write `InMemoryCustomerRepository` in `tests/unit/domain_fakes.py`.
 - [ ] 3.3 Write `domain/customers/service.py`, with its tests:
   - The `CustomerRepository` `Protocol`, and
     `CustomerService.get_or_create_by_phone`.

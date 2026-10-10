@@ -8,7 +8,7 @@ paridad con PostgreSQL se prueba en `tests/integration/`.
 from decimal import Decimal
 
 from app.domain.menu.schemas import MenuItemUpdate
-from unit.domain_fakes import InMemoryMenuRepository
+from unit.domain_fakes import InMemoryCustomerRepository, InMemoryMenuRepository
 
 
 def _menu() -> InMemoryMenuRepository:
@@ -71,3 +71,19 @@ def test_calls_are_recorded() -> None:
     repo.list_categories()
 
     assert repo.calls == ["get_item", "list_categories"]
+
+
+# --- Customers -----------------------------------------------------------------
+
+
+def test_customer_fake_keeps_one_customer_per_phone() -> None:
+    repo = InMemoryCustomerRepository()
+
+    first = repo.get_or_create("5491155551234")
+    again = repo.get_or_create("5491155551234")
+    other = repo.get_or_create("5491166667777")
+
+    assert again == first
+    assert other.id != first.id
+    assert repo.count("5491155551234") == 1
+    assert repo.calls == ["get_or_create"] * 3

@@ -11,6 +11,7 @@ from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from decimal import Decimal
 
+from app.domain.customers.schemas import CustomerRead
 from app.domain.menu.schemas import MenuItemRead, MenuItemUpdate
 
 CENT = Decimal("0.01")
@@ -105,3 +106,35 @@ class InMemoryMenuRepository:
         updated = MenuItemRead.model_validate(current.model_dump() | values)
         self._items[item_id] = updated
         return updated
+
+
+@dataclass
+class InMemoryCustomerRepository:
+    """Customers en memoria, uno por teléfono, como el índice único de la base.
+
+    La concurrencia no se emula: la garantía real sale del índice único y se
+    prueba en `tests/integration/` (design D4). `calls` registra cada método
+    invocado, para verificar que un teléfono inválido no llega al repositorio.
+    """
+
+    _by_phone: dict[str, CustomerRead] = field(default_factory=dict)
+    _next_id: int = 1
+    calls: list[str] = field(default_factory=list)
+
+    def count(self, phone: str) -> int:
+        """Cuántos customers tienen ese teléfono, sin registrar la llamada."""
+        return sum(1 for customer in self._by_phone.values() if customer.phone == phone)
+
+    # --- Interfaz del repositorio ------------------------------------------
+
+    def get_or_create(self, phone: str) -> CustomerRead:
+        self.calls.append("get_or_create")
+        existing = self._by_phone.get(phone)
+        if existing is not None:
+            return existing
+        created = CustomerRead(
+            id=self._next_id, phone=phone, name=None, created_at=FIXED_CREATED_AT
+        )
+        self._by_phone[phone] = created
+        self._next_id += 1
+        return created
