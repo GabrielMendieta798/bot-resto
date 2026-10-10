@@ -118,7 +118,7 @@ service that is tested against it.
     `created_at` is rejected; `created_at` is normalized to UTC; the object is
     frozen.
 - [x] 3.2 Write `InMemoryCustomerRepository` in `tests/unit/domain_fakes.py`.
-- [ ] 3.3 Write `domain/customers/service.py`, with its tests:
+- [x] 3.3 Write `domain/customers/service.py`, with its tests:
   - The `CustomerRepository` `Protocol`, and
     `CustomerService.get_or_create_by_phone`.
   - It validates the phone with `re.fullmatch(r"[0-9]{8,15}", ...)` and
