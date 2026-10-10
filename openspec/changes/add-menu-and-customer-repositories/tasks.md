@@ -111,7 +111,7 @@ Regrouped on 10/10/2026 at Lautaro's request, like group 2: each task ships
 the behavior with the tests of its scenarios, and the fake comes before the
 service that is tested against it.
 
-- [ ] 3.1 Write `domain/customers/schemas.py`, with its tests:
+- [x] 3.1 Write `domain/customers/schemas.py`, with its tests:
   - `CustomerRead`: frozen, with `phone` set to `repr=False` and `created_at`
     as an `AwareDatetime` normalized to UTC.
   - Unit tests: `str` and `repr` of `CustomerRead` hide the phone; a naive
