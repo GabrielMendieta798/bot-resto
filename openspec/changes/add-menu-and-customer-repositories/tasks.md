@@ -107,27 +107,33 @@ comes before the service that is tested against it.
 
 ## 3. Customer schemas and service
 
-- [ ] 3.1 Write `domain/customers/schemas.py`: `CustomerRead`, frozen, with
-  `phone` set to `repr=False` and `created_at` as an `AwareDatetime`
-  normalized to UTC.
-- [ ] 3.2 Write `domain/customers/service.py`: the `CustomerRepository`
-  `Protocol`, and `CustomerService.get_or_create_by_phone`.
+Regrouped on 10/10/2026 at Lautaro's request, like group 2: each task ships
+the behavior with the tests of its scenarios, and the fake comes before the
+service that is tested against it.
+
+- [ ] 3.1 Write `domain/customers/schemas.py`, with its tests:
+  - `CustomerRead`: frozen, with `phone` set to `repr=False` and `created_at`
+    as an `AwareDatetime` normalized to UTC.
+  - Unit tests: `str` and `repr` of `CustomerRead` hide the phone; a naive
+    `created_at` is rejected; `created_at` is normalized to UTC; the object is
+    frozen.
+- [ ] 3.2 Write `InMemoryCustomerRepository` in `tests/unit/domain_fakes.py`.
+- [ ] 3.3 Write `domain/customers/service.py`, with its tests:
+  - The `CustomerRepository` `Protocol`, and
+    `CustomerService.get_or_create_by_phone`.
   - It validates the phone with `re.fullmatch(r"[0-9]{8,15}", ...)` and
     raises `InvalidInputError(field="phone")` with a fixed detail, before
     calling the repository (design D5).
   - No Pydantic validation of the phone and no logging of it.
-- [ ] 3.3 Write `InMemoryCustomerRepository` in `tests/unit/domain_fakes.py`.
-- [ ] 3.4 Unit tests for `customer-registry`:
-  - A new number creates the customer; a known number returns the same id
-    without duplicating.
-  - Formatted numbers, letters, an empty value, 7 and 16 digits, and
-    non-ASCII digits are rejected without calling the repository; 8 and 15
-    digits are accepted.
-  - The phone is absent from the message, `str`, `repr`, the exception chain
-    and the captured log (`caplog` plus the JSON handler of
-    `configure_logging`).
-  - `str` and `repr` of `CustomerRead` hide the phone, and a naive
-    `created_at` is rejected.
+  - Unit tests for `customer-registry`:
+    - A new number creates the customer; a known number returns the same id
+      without duplicating.
+    - Formatted numbers, letters, an empty value, 7 and 16 digits, and
+      non-ASCII digits are rejected without calling the repository; 8 and 15
+      digits are accepted.
+    - The phone is absent from the message, `str`, `repr`, the exception
+      chain and the captured log (`caplog` plus the JSON handler of
+      `configure_logging`).
 
 ## 4. Repositories
 
