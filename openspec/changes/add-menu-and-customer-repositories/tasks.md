@@ -211,15 +211,15 @@ check lives in each repository module instead, as
 
 ## 6. Closing
 
-- [ ] 6.1 Run the full `run-verify` (ruff, format, mypy strict, unit and
+- [x] 6.1 Run the full `run-verify` (ruff, format, mypy strict, unit and
   integration) until it is green, and record the result.
-- [ ] 6.2 Confirm that `backend/app/models/`, `backend/alembic/`,
+- [x] 6.2 Confirm that `backend/app/models/`, `backend/alembic/`,
   `backend/app/core/` and `backend/app/api/` have no diff, and that no
   migration was generated.
-- [ ] 6.3 Run `@security` on the change, paying attention to `raise`
+- [x] 6.3 Run `@security` on the change, paying attention to `raise`
   statements built from customer data (the `structured-logging` requirement)
   and to SQL construction (`SEC-4`). Fix the medium and high findings.
-- [ ] 6.4 Update `ESTADO.md`:
+- [x] 6.4 Update `ESTADO.md`:
   - D-9 confirmed (`configure_mappers()` is now exercised).
   - New debt, **prerequisite of the orders change**: the `NOT NULL`
     migration of `menu_items.estimated_time_min` (`ORD-12`).
