@@ -28,16 +28,56 @@ scenario (`SDD-2`). `backend/app/models/`, `backend/alembic/`,
 
 ## 2. Menu schemas and service
 
-- [ ] 2.1 Write `domain/menu/schemas.py`:
+Regrouped on 10/10/2026 at Lautaro's request, with the same content: each task
+ships the behavior together with the tests of its scenarios, and the fake
+comes before the service that is tested against it.
+
+- [x] 2.1 Write `domain/menu/schemas.py`, with its tests:
   - `MenuItemRead`: frozen; `price` is a `Decimal` with exponent `-2`;
     `created_at` is an `AwareDatetime` normalized to UTC;
     `estimated_time_min: int | None`.
   - `MenuItemUpdate`: every field optional; `strict`, `extra="forbid"` and
-    `str_strip_whitespace`; `name` not nullable, 1 to 150 characters; `price`
-    a non-nullable `Decimal`, finite; `description` nullable;
-    `estimated_time_min` a non-nullable `int` (design D5, shape table). No sign, scale
-    or range constraint: those are rules and belong in the service.
-- [ ] 2.2 Write `domain/menu/service.py`:
+    `str_strip_whitespace`; `name` not nullable, 1 to 150 characters;
+    `description` nullable; `price` a non-nullable, finite `Decimal` that also
+    accepts `int` and decimal text and rejects `float` and `bool`;
+    `estimated_time_min` a non-nullable `int` that also accepts integer text
+    and rejects `bool` and `float` (design D5, shape table and "Texto en los
+    campos numéricos"). No sign, scale or range constraint: those are rules
+    and belong in the service.
+  - `tests/unit/test_menu_schemas.py` for the requirement "Edit shape is
+    validated by the edit object":
+    - the field outside the edit (category, availability, identifier);
+    - a name that is blank, 151 characters long, or null;
+    - a price that is a float (`9200.5`, `1500.0`), `true`, `NaN`, infinity
+      or null;
+    - a price as decimal text (`"9200.00"`, `" 9200.00 "`, `"1E+3"`) or an
+      integer, accepted as exact values; `""`, `"NaN"`, `"Infinity"`,
+      `"1,5"`, `"1_000"`, `"+5"` and non-ASCII digits rejected;
+    - an estimated time as integer text (`"25"`, `" 25 "`, `"-5"`) accepted;
+      `true`, `12.5`, `""`, `"25.0"`, `"2.5"` and non-ASCII digits rejected;
+      null rejected, meaning the estimated time cannot go back to unknown;
+    - form-encoded input, covered by validating a dict of strings, which is
+      what a form delivers (`python-multipart` is not installed and
+      `pyproject.toml` is off limits, so the real form `POST` test goes with
+      the panel change);
+    - "absent and empty are different" at the `model_fields_set` level;
+    - the name is trimmed.
+
+    Then request-level tests with a throwaway FastAPI route that takes
+    `MenuItemUpdate` as its JSON body, run through `create_app`'s error
+    handlers:
+    - a shape error gives a `400` with `invalid_input` and the field, and the
+      body does not echo the value;
+    - a valid text price, a JSON integer price and a text estimated time reach
+      the handler as exact values;
+    - a JSON number with a fractional part is rejected for `price` (`DAT-8`).
+
+    The route is test-only; no endpoint is added to the app.
+  - Unit tests for `domain-data-boundary`: building `MenuItemRead` with a
+    naive `created_at` fails, and returned objects are frozen.
+- [ ] 2.2 Write `InMemoryMenuRepository` in `tests/unit/domain_fakes.py`,
+  implementing the same ordering and filters as design D7.
+- [ ] 2.3 Write `domain/menu/service.py`, with its tests:
   - `MenuRepository` `Protocol`, and `MenuService` with `list_categories`,
     `list_available_items`, `list_all_items`, `get_item`, `set_available` and
     `update_item(item_id, changes: MenuItemUpdate)`.
@@ -47,42 +87,23 @@ scenario (`SDD-2`). `backend/app/models/`, `backend/alembic/`,
   - An out-of-range id raises `NotFoundError` without calling the repository,
     and the `NotFoundError` detail carries only the id.
   - The changes are built from `model_fields_set` (design D6).
-- [ ] 2.3 Write `InMemoryMenuRepository` in `tests/unit/domain_fakes.py`,
-  implementing the same ordering and filters as design D7.
-- [ ] 2.4 Write `tests/unit/test_menu_schemas.py` for the requirement "Edit
-  shape is validated by the edit object":
-  - the field outside the edit (category, availability, identifier);
-  - a name that is blank, 151 characters long, or null;
-  - a price that is a float, `NaN`, infinity or null;
-  - an estimated time of `true`, `12.5`, `"20"` or null, where null means
-    the estimated time cannot go back to unknown;
-  - "absent and empty are different" at the `model_fields_set` level;
-  - the name is trimmed.
-
-  Then a request-level test with a throwaway FastAPI route that takes
-  `MenuItemUpdate` as its body, run through `create_app`'s error handlers. It
-  checks for a `400` with `invalid_input` and the field, and that the body
-  does not echo the value. The route is test-only; no endpoint is added to the
-  app.
-- [ ] 2.5 Unit tests for `menu-catalog` against the fake:
-  - **Categories:** listed only when they have an available item, each once;
-    selling out the last item hides the category.
-  - **Listings:** available items are filtered and ordered by name, then id;
-    an unknown category gives an empty list; the staff list includes
-    unavailable items, in the same order; looking up an unavailable item
-    works.
-  - **Availability:** `set_available` to false, to true, and twice with the
-    same value.
-  - **Not found:** get, set and edit with an id-only message; ids `0`, `-1`
-    and `2**63`.
-  - **Edits:** an edit of only the price leaves the rest; an empty
-    description clears it; an empty edit is rejected.
-  - **Rules:** every case of "Edit business rules are enforced by the menu",
-    with the right `field`; `1500.500` is stored as `1500.50`; zero price and
-    zero time are accepted; the rejected value is absent from the message, the `repr` and the exception
-    chain.
-- [ ] 2.6 Unit test for `domain-data-boundary`: building `MenuItemRead` with a
-  naive `created_at` fails, and returned objects are frozen.
+  - Unit tests for `menu-catalog` against the fake:
+    - **Categories:** listed only when they have an available item, each
+      once; selling out the last item hides the category.
+    - **Listings:** available items are filtered and ordered by name, then
+      id; an unknown category gives an empty list; the staff list includes
+      unavailable items, in the same order; looking up an unavailable item
+      works.
+    - **Availability:** `set_available` to false, to true, and twice with the
+      same value.
+    - **Not found:** get, set and edit with an id-only message; ids `0`, `-1`
+      and `2**63`.
+    - **Edits:** an edit of only the price leaves the rest; an empty
+      description clears it; an empty edit is rejected.
+    - **Rules:** every case of "Edit business rules are enforced by the
+      menu", with the right `field`; `1500.500` is stored as `1500.50`; zero
+      price and zero time are accepted; the rejected value is absent from the
+      message, the `repr` and the exception chain.
 
 ## 3. Customer schemas and service
 

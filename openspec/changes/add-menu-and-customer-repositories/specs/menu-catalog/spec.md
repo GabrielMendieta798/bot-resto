@@ -182,10 +182,24 @@ body and the field when it is the request payload, never echoing the input),
 any edit whose shape is wrong: a field outside name, description, price and
 estimated time (including category, availability and identifier); a name that
 is empty, blank, longer than 150 characters, or explicitly null; a price that
-is not a decimal number (including a binary floating-point number), is not
-finite, or is explicitly null; an estimated time that is not an integer
-(including a boolean) or is explicitly null. Shape is checked when the edit object is built, before
-the service is called (`VAL-1`).
+is not exact (a binary floating-point number, including a JSON number with a
+fractional part, or a boolean), is not finite, is text that is not decimal
+text, or is explicitly null; an estimated time that is a boolean, a
+floating-point number, text that is not integer text, or explicitly null.
+Shape is checked when the edit object is built, before the service is called
+(`VAL-1`).
+
+Because panel forms send every value as text and JSON payloads send numbers,
+the edit object SHALL also accept, as exact values:
+
+- **Price:** a decimal, an integer, or *decimal text*: ASCII digits with an
+  optional leading `-`, an optional fractional part and an optional exponent
+  (`9200.00`, `1E+3`), with surrounding spaces ignored.
+- **Estimated time:** an integer or *integer text*: ASCII digits with an
+  optional leading `-`, with surrounding spaces ignored.
+
+A negative value in text passes shape and is rejected by the business rules,
+like a negative number.
 
 #### Scenario: Field outside the edit
 
@@ -199,16 +213,46 @@ the service is called (`VAL-1`).
   an explicit null
 - **THEN** building it fails with a validation error for field `name`
 
-#### Scenario: Price that is not a decimal
+#### Scenario: Price that is not exact
 
 - **WHEN** an edit object is built with a price that is a binary
-  floating-point number, `NaN`, infinity, or an explicit null
+  floating-point number (`9200.5`, `1500.0`), `true`, `NaN`, infinity, or an
+  explicit null
 - **THEN** building it fails with a validation error for field `price`
+
+#### Scenario: Price as exact decimal text
+
+- **WHEN** an edit object is built with price `"9200.00"`, whether from code,
+  from a JSON payload or from form-encoded text
+- **THEN** the price is `Decimal("9200.00")`
+- **AND** a price given as a binary floating-point number, in Python or as a
+  JSON number with a fractional part, is still rejected for field `price`
+
+#### Scenario: Integer price
+
+- **WHEN** an edit object is built with price `1500` (a Python or JSON
+  integer)
+- **THEN** the price is `Decimal("1500")`, an exact value
+
+#### Scenario: Monetary text edge cases
+
+- **WHEN** an edit object is built with price `" 9200.00 "` or `"1E+3"`
+- **THEN** the price is `Decimal("9200.00")` or `Decimal("1E+3")` respectively
+- **AND WHEN** it is built with price `""`, `"NaN"`, `"Infinity"`, `"1,5"`,
+  `"1_000"`, `"+5"` or digits from another script such as `"١٢٣"`
+- **THEN** building it fails with a validation error for field `price`
+
+#### Scenario: Estimated time as integer text
+
+- **WHEN** an edit object is built with estimated time `"25"` or `" 25 "`
+- **THEN** the estimated time is `25`
+- **AND WHEN** it is built with `"-5"`
+- **THEN** it is `-5`, left for the business rules to reject
 
 #### Scenario: Estimated time that is not an integer
 
-- **WHEN** an edit object is built with estimated time `true`, `12.5` or
-  `"20"`
+- **WHEN** an edit object is built with estimated time `true`, `12.5`, `""`,
+  `"25.0"`, `"2.5"` or digits from another script such as `"١٢"`
 - **THEN** building it fails with a validation error for field
   `estimated_time_min`
 
@@ -222,7 +266,8 @@ the service is called (`VAL-1`).
 
 #### Scenario: Shape error as a request payload
 
-- **WHEN** a request whose payload is the edit object carries a shape error
+- **WHEN** a request whose payload is the edit object, sent as JSON, carries a
+  shape error
 - **THEN** the response is `400` with code `invalid_input` and the field, and
   the body does not contain the rejected value
 

@@ -267,24 +267,63 @@ con su valor.
 |---|---|---|
 | `name` | `str`, no nulo | trim, de 1 a 150 caracteres (`String(150)`) |
 | `description` | `str \| None` | trim; si queda vacío o viene `None`, se guarda sin descripción |
-| `price` | `Decimal`, no nulo | `allow_inf_nan=False`; `strict` rechaza `float`, `str` e `int` |
-| `estimated_time_min` | `int`, no nulo | `strict` rechaza `bool`, `float` y `str`; un `null` explícito falla acá (nulidad = forma), así el tiempo nunca vuelve a desconocido |
+| `price` | `Decimal`, no nulo | acepta `Decimal`, `int` y texto decimal (ver abajo); rechaza `float` y `bool` (DAT-8); `allow_inf_nan=False` |
+| `estimated_time_min` | `int`, no nulo | acepta `int` y texto entero (ver abajo); rechaza `bool` y `float`; un `null` explícito falla acá (nulidad = forma), así el tiempo nunca vuelve a desconocido |
+
+**Texto en los campos numéricos (aprobado por Lautaro el 10/10).** FastAPI
+valida el payload en modo Python, después de `json.loads`, así que un precio en
+JSON llega como `str` o como `float`, nunca como `Decimal`. Además, los
+formularios HTMX del panel mandan todo como texto. Con `strict` puro ningún
+request podría traer un precio, lo cual se reprodujo en el apply de 2.1.
+
+Por eso cada campo numérico tiene un validador `mode="before"` que fija qué
+entra, y el campo sigue `strict` para lo demás:
+
+- **`price`**
+  - `float` y `bool` se rechazan siempre: un número binario nunca se convierte
+    en dinero (DAT-8). Esto incluye un número JSON con parte decimal, que
+    `json.loads` entrega como `float` (`1500.5` y también `1500.0`).
+  - Un `int` se convierte a `Decimal` porque es exacto, y eso incluye un
+    entero JSON.
+  - El texto, sin espacios en los bordes, tiene que cumplir
+    `-?[0-9]+(\.[0-9]+)?([eE][+-]?[0-9]+)?`. Se convierte con
+    `Decimal(texto)`, que es exacto.
+- **`estimated_time_min`**
+  - `bool` y `float` se rechazan.
+  - El texto, sin espacios en los bordes, tiene que cumplir `-?[0-9]+` y se
+    convierte con `int(texto)`.
+
+El patrón es explícito, con `[0-9]` y en ASCII, porque el parser de Pydantic
+acepta por su cuenta cosas que no son un importe. Probado el 10/10:
+`"١٢٣"` → `123` y `"1_000"` → `1000`.
+
+Quedan rechazados `""`, `"NaN"`, `"Infinity"`, `"1,5"`, `"1_000"`, `"+5"` y
+los dígitos de otra escritura. El exponente (`"1E+3"`) se acepta porque es
+exacto, y la regla de dos decimales del servicio decide si sirve como precio.
+
+El signo `-` se acepta en el texto para que un negativo llegue a la regla de
+negocio, igual que un número negativo, y no cambie de capa según venga como
+texto o como número.
+
+**Form-encoded.** Para leer un formulario, FastAPI necesita la dependencia
+`python-multipart`. Hoy no está instalada, y `pyproject.toml` no se toca en
+este change. Los tests cubren el caso validando un diccionario de strings,
+que es exactamente lo que entrega un formulario. El test de un `POST`
+form-encoded real va con el change del panel, que suma esa dependencia.
 
 Probado el 10/10 con la versión pineada:
 
 - `name=None` da `string_type` y `name="   "` da `string_too_short`.
-- `price=None` y `price=1.5` dan `is_instance_of`, y `price=NaN` da
-  `finite_number`.
 - `category="x"` da `extra_forbidden` y `estimated_time_min=True` da
   `int_type`.
 - `model_fields_set` distingue `{}` de `{"description"}` cuando el valor es
   `None`.
-- Con el mismo patrón que `name` y `price` (default `None`, tipo no nulo),
-  `estimated_time_min=None` explícito da error de tipo.
 
-Cómo declarar "opcional pero no nulo" sin pelearse con mypy (un default
-`None` sobre `str`, o un validador `mode="before"`) se resuelve en el apply.
-El comportamiento está fijado por la spec.
+**"Opcional pero no nulo".** El plugin de Pydantic para mypy no acepta un
+default `None` sobre un tipo no nulo, y la tarea prohíbe `# type: ignore`. Por
+eso los tres campos se declaran `X | None = None`, y un validador `after`
+rechaza el `None`. Los validadores no corren sobre el default, así que el
+`None` que llega siempre es uno explícito.
 
 **Camino de los errores de forma.** Un `ValidationError` al construir
 `MenuItemUpdate` no es un error del dominio: sigue el camino de validación
