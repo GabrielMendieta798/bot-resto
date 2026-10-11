@@ -2,7 +2,7 @@
 
 Snapshot del proyecto entre sesiones. Se actualiza con la skill `update-estado` al cerrar cada change y cada sesión (`SDD-5`).
 
-**Última actualización:** 03/10/2026 — cierre de `add-application-skeleton` (apply completo y archivado)
+**Última actualización:** 11/10/2026 — `migrate-identifiers-to-bigint` implementado y verificado; pendiente de archive/PR
 
 > **Hueco conocido:** entre el 19/09 y el 02/10 hubo sesiones que no actualizaron este archivo (inicialización de OpenSpec, tres changes propuestos, cuatro migraciones, PRs #15 a #19). Lo de ese período que no se pudo verificar en el repo figura como `ESTADO DESCONOCIDO`.
 
@@ -10,12 +10,13 @@ Snapshot del proyecto entre sesiones. Se actualiza con la skill `update-estado` 
 
 ## Snapshot
 
-Fase actual: **esqueleto de la aplicación cerrado y archivado.** La app levanta y se puede verificar; todavía ningún caso de uso.
+Fase actual: **esqueleto de la aplicación archivado y migración de identificadores a BIGINT verificada.** La app levanta; todavía ningún caso de uso.
 
 - Repo: `GabrielMendieta798/bot-resto`. Flujo por PR vía `develop` (PRs #15 a #23 mergeados; `develop` y `main` en `4bc1c24`). Ramas `change/<slug>`.
 - OpenSpec inicializado. Changes activos: **3** (`add-whatsapp-message-idempotency`, `allow-order-additions`, `migrate-identifiers-to-bigint`). Archivados: **1** (`add-application-skeleton`). Main specs en `openspec/specs/`: 6 capabilities. Los nombres no siguen la numeración 00–09 del plan de `AI_WORKFLOW.md`; la correspondencia es `ESTADO DESCONOCIDO`.
 - **`add-application-skeleton`:** archivado el 03/10 (40/40 tareas). Último `run-verify` en verde el 03/10: ruff, format, mypy estricto, 92 tests unitarios y 1 de integración. `@security`: tercera pasada sin medios ni altos. Llegó a `main` en los PRs #20 a #23.
-- Base local de desarrollo: contenedor `bot-resto-db` (`postgres:16`). Los tests de integración corren contra ella.
+- **`migrate-identifiers-to-bigint`:** apply completo el 11/10 (18/18 tareas), todavía activo y pendiente de archive/PR. Las 12 columnas PK/FK y las 6 secuencias usan BIGINT; upgrade, integridad y downgrade fueron verificados contra PostgreSQL real.
+- Base local de desarrollo: PostgreSQL 16.15 en el host, base `bot_resto`. Los tests destructivos de migración usan exclusivamente `bot_resto_test`, propiedad de `bot_resto_user`, y reinician su esquema antes y después de cada escenario.
 - La app ya levanta: `uv run uvicorn app.main:app` desde `backend/`. Exige `APP_ENV` en el `.env`.
 
 ## Hecho
@@ -27,11 +28,12 @@ Fase actual: **esqueleto de la aplicación cerrado y archivado.** La app levanta
 - [x] 3 subagentes read-only: `@security`, `@test-writer`, `@api-explorer`
 - [ ] Playbook de prompts (Fase C) — `PLAYBOOK.md` existe; si la Fase C se dio por cerrada es `ESTADO DESCONOCIDO`
 - [x] `add-application-skeleton` — archivado el 03/10/2026 (PRs #20 a #23)
+- [x] `migrate-identifiers-to-bigint` — implementación y verificación completas el 11/10/2026; archive/PR pendientes
 
 ## Próximo paso
 
-1. **Elegir cuál de los tres changes activos sigue** (`add-whatsapp-message-idempotency`, `allow-order-additions`, `migrate-identifiers-to-bigint`). El orden respecto del plan 00–09 (`SDD-6`) es `ESTADO DESCONOCIDO`: confirmarlo antes de arrancar.
-2. Al retomarlo, revisar su `tasks.md`: sus tareas de verificación ahora tienen dónde correr (`tests/unit`, `tests/integration`, `run-verify`). `add-whatsapp-message-idempotency` tiene pendientes 1.3–1.6, 3.1–3.7, 4.1–4.7 y 5.1–5.2; las de migración necesitan la base `bot-resto-db`.
+1. Revisar el diff de `migrate-identifiers-to-bigint`, preparar su PR y archivarlo únicamente después del merge y de confirmar nuevamente el estado verde.
+2. Elegir cuál de los otros dos changes activos sigue (`add-whatsapp-message-idempotency` o `allow-order-additions`). El orden respecto del plan 00–09 (`SDD-6`) sigue como `ESTADO DESCONOCIDO`: confirmarlo antes de arrancar.
 3. El primer change que exponga el webhook arrastra las deudas D-12 a D-14 (D-14 es Media y va **antes** de exponerlo).
 
 ## Bloqueantes
@@ -102,6 +104,8 @@ Fase actual: **esqueleto de la aplicación cerrado y archivado.** La app levanta
 | 03/10 | **`UnhandledErrorMiddleware` en lugar del handler de `Exception`** | Con el handler, Starlette re-levanta la excepción y uvicorn la vuelve a loguear completa, con datos del cliente. Reproducido con uvicorn real y un `IntegrityError` con dirección: dos records con la dirección; después del arreglo, uno y sin la dirección |
 | 03/10 | Errores de SQLAlchemy y de validación (en cualquier eslabón de la cadena) se loguean sin mensaje; el resto de las excepciones conserva su mensaje | Sin mensajes se depura a ciegas. Se descartó la alternativa estricta (ningún mensaje) y se agregó a la spec de `structured-logging` el requirement "Exception messages carry no customer data", para que los próximos changes se enteren y `@security` lo revise |
 | 03/10 | Los tests de rutas recorren nuestros routers + el esquema OpenAPI, no `app.routes` | FastAPI 0.142 envuelve los routers incluidos en `_IncludedRouter`, privado; depender de él rompería con cualquier actualización |
+| 11/10 | PK, FK y secuencias internas existentes usan PostgreSQL `BIGINT`; Python conserva `int` | Evita agotar `INTEGER` y una migración más costosa con tablas grandes. El costo es más espacio por clave e índice y locks durante el cambio de tipo |
+| 11/10 | Los tests destructivos de Alembic usan `bot_resto_test`, no la base de desarrollo | Permite probar upgrade y downgrade reales sin darle `CREATEDB` al rol de la aplicación ni arriesgar datos de `bot_resto` |
 
 ## Changes archivados
 
