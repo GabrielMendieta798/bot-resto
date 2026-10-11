@@ -43,6 +43,89 @@ Si una instrucción de este archivo entra en conflicto con `.instructions.md`, p
 
 No modificar decisiones normativas establecidas en `.instructions.md` sin indicarlo explícitamente.
 
+
+## 2.1 Navegación de contexto y workflow
+
+No todos los documentos del repositorio deben cargarse para todas las tareas.
+Consultar solamente los que correspondan al trabajo actual.
+
+### Reglas normativas
+
+`.instructions.md`
+
+Contiene decisiones, restricciones e invariantes normativos del proyecto.
+Tiene prioridad sobre `AGENTS.md` cuando exista conflicto.
+
+### Routing de agentes
+
+`AI_WORKFLOW.md`
+
+Consultar cuando:
+
+- se vaya a implementar una task;
+- sea necesario decidir entre OpenCode y Reasoning Agent;
+- haya que elegir o ajustar el nivel de razonamiento;
+- se divida trabajo entre desarrolladores o agentes.
+
+No duplicar sus reglas dentro de `AGENTS.md`.
+
+### Estado del proyecto
+
+`ESTADO.md`
+
+Consultar al:
+
+- iniciar o retomar una sesión de desarrollo;
+- continuar trabajo iniciado previamente;
+- preguntar qué queda pendiente;
+- cerrar una sesión.
+
+Usarlo para identificar el change activo, la task actual,
+bloqueos y próximo paso.
+
+### OpenSpec
+
+Para trabajo sobre un change activo consultar, según necesidad:
+
+`openspec/changes/<slug>/proposal.md`
+`openspec/changes/<slug>/design.md`
+`openspec/changes/<slug>/specs/`
+`openspec/changes/<slug>/tasks.md`
+
+Responsabilidades:
+
+- `proposal.md`: por qué y qué se cambia;
+- `design.md`: cómo se decidió implementarlo;
+- `specs/`: comportamiento requerido;
+- `tasks.md`: división y estado de la implementación.
+
+`openspec/specs/` representa el comportamiento aprobado actualmente
+por el sistema.
+
+### Playbook
+
+`PLAYBOOK.md`
+
+Consultar al ejecutar procedimientos definidos del workflow,
+como propose, apply, verify, archive o cierre de change.
+
+También contiene:
+
+- el protocolo de handoff entre herramientas;
+- la regla de escalamiento ante fallos repetidos;
+- los checklists operativos y de cierre.
+
+### Regla de contexto
+
+No leer documentación irrelevante solamente porque existe.
+
+Cargar contexto progresivamente:
+
+1. reglas permanentes;
+2. estado si se está retomando trabajo;
+3. change activo;
+4. task actual;
+5. código y tests afectados.
 ---
 
 ## 3. Regla principal: explicar antes de actuar

@@ -45,7 +45,7 @@ Faltan: `main.py`, tests, docker-compose, CI, y todo lo de WhatsApp, notificacio
 
 ## P0.1 — Saneamiento y constitución · ✅ YA HECHO A MANO
 
-**Herramienta:** Claude Code, o a mano — son siete operaciones de git.
+**Herramienta:** Reasoning Agent, o a mano — son siete operaciones de git.
 
 ```
 Vamos a sanear el repo e instalar las reglas del proyecto. No implementes ningún caso de uso, no crees modelos, no muevas archivos de lugar.
@@ -69,7 +69,7 @@ Rama `chore/setup`, un commit por tarea que sea commiteable, y abrí el PR.
 
 ## P0.2 — Toolchain y esqueleto de la app
 
-**Herramienta:** Claude Code. Es el prompt más largo de la Fase 0.
+**Herramienta:** Reasoning Agent. Es el prompt más largo de la Fase 0.
 
 ```
 Completá el toolchain y el esqueleto de la app. Leé primero .instructions.md, AGENTS.md y .opencode/HIERARCHY.md.
@@ -115,7 +115,7 @@ Al terminar corré la skill run-verify y mostrame el resultado. Después abrí e
 openspec init
 ```
 
-Elegí **OpenCode** y **Claude Code**. Al terminar, verificá que `/opsx-propose`, `/opsx-apply` y `/opsx-archive` estén disponibles en las dos.
+Elegí **OpenCode** y el **Reasoning Agent** que vayas a usar, si aparece entre las opciones disponibles. Al terminar, verificá que `/opsx-propose`, `/opsx-apply` y `/opsx-archive` estén disponibles en ambas herramientas.
 
 > **Al revisar:** `openspec init` **escribe en `AGENTS.md` y en `CLAUDE.md`**. Los dos están gitignoreados, así que no vas a ver el cambio en un PR: mirá el diff local antes de seguir. Si te agregó instrucciones que diluyen o contradicen lo que ya tenías, revertí esa parte — `PRI-2` dice que ninguna herramienta relaja una regla. Lo que sí conviene dejar es la referencia a dónde viven los changes. Y confirmá que `openspec/` **no** quedó en el `.gitignore`: esa carpeta se commitea.
 
@@ -145,7 +145,7 @@ No toques el código de la app. Solo .github/workflows/.
 
 ## P0.5 — Sanity check de governance
 
-**Herramienta:** las dos. Mismo prompt en OpenCode y en Claude Code, y comparás.
+**Herramienta:** las dos. Mismo prompt en OpenCode y en el Reasoning Agent elegido, y comparás.
 
 ```
 Sin escribir ni modificar código, respondeme:
@@ -160,7 +160,7 @@ Sin escribir ni modificar código, respondeme:
 8. ¿Cuáles son los estados válidos de un Order y cuáles son terminales?
 ```
 
-> **Al revisar:** esto es un test del andamiaje, no una consulta. **La 5 tiene que decir que frena, cita la regla por código y te propone dos caminos** — si contesta algo tipo "lo haría igual, con cuidado", el `.instructions.md` no está entrando en contexto y todo lo que construyas después es humo. **La 6 tiene que decir handoff a Claude Code. La 7 tiene que ser un no rotundo.** La 8 verifica que leyó la tabla de vocabulario: tiene que nombrar los siete estados y marcar `DELIVERED`, `CANCELLED_BY_CUSTOMER` y `CANCELLED_BY_STAFF` como terminales. Si te dice `CANCELLED` a secas, está citando `database.sql` en vez de la constitución. Si una herramienta no ve las skills, el problema es de ubicación de carpetas: revisá el espejado de P0.1.
+> **Al revisar:** esto es un test del andamiaje, no una consulta. **La 5 tiene que decir que frena, cita la regla por código y te propone dos caminos** — si contesta algo tipo "lo haría igual, con cuidado", el `.instructions.md` no está entrando en contexto y todo lo que construyas después es humo. **La 6 tiene que decir handoff a un Reasoning Agent. La 7 tiene que ser un no rotundo.** La 8 verifica que leyó la tabla de vocabulario: tiene que nombrar los siete estados y marcar `DELIVERED`, `CANCELLED_BY_CUSTOMER` y `CANCELLED_BY_STAFF` como terminales. Si te dice `CANCELLED` a secas, está citando `database.sql` en vez de la constitución. Si una herramienta no ve las skills, el problema es de ubicación de carpetas: revisá el espejado de P0.1.
 
 ---
 
@@ -183,7 +183,7 @@ Sin escribir ni modificar código, respondeme:
 
 ## Change 00 — `walking-skeleton`
 
-**Complejidad:** alta · **Criticidad:** sensible · **Apply en:** Claude Code · **Audita:** `@security`
+**Complejidad:** alta · **Criticidad:** sensible · **Routing inicial:** Reasoning Agent · **Audita:** `@security`
 
 Va primero a propósito. Lo más incierto de todo el proyecto es la frontera con Meta: firma, idempotencia y el viaje de ida y vuelta por la Cloud API. Eso se ataca ahora, no a la mitad del proyecto con cinco changes encima.
 
@@ -241,9 +241,9 @@ Esto no se delega. Cinco cosas que tenés que ver escritas en `design.md` y en `
 
 ### Ruteo y regla de escape
 
-**Apply en Claude Code.** Complejidad alta y criticidad sensible: acá hay HMAC, transacciones, `ON CONFLICT` y una carrera real. El propose es barato en cualquiera de las dos, pero el apply no.
+**Routing inicial: Reasoning Agent.** Complejidad alta y criticidad sensible: acá hay HMAC, transacciones, `ON CONFLICT` y una carrera real. El propose es barato en cualquier herramienta, pero el apply no.
 
-Si igual lo arrancás en OpenCode y `run-verify` falla 2 o 3 veces por la misma causa, **handoff a Claude Code** con la plantilla de `AI_WORKFLOW.md` §3, revirtiendo antes lo que quedó a medias.
+Si igual lo arrancás en OpenCode y `run-verify` falla 2 o 3 veces por la misma causa, hacé **handoff a un Reasoning Agent** con la plantilla de `PLAYBOOK.md`, sección “Handoff entre herramientas”, revirtiendo antes lo que quedó a medias.
 
 ### Después de esto
 
@@ -253,7 +253,7 @@ No te tiro el prompt de `/opsx-apply` todavía. Primero revisás la spec con los
 
 ## Change 01 — `cimientos-datos`
 
-**CU-03 / 17 / 18** · Complejidad media · Criticidad normal · **Apply en OpenCode** · sin auditoría
+**CU-03 / 17 / 18** · Complejidad media · Criticidad normal · **Routing inicial: OpenCode** · sin auditoría
 
 Es el change que absorbe lo que ya está escrito en el repo (`SDD-7`) y lo alinea con la estructura objetivo.
 
@@ -308,7 +308,7 @@ Restricciones: .instructions.md §GEN-1, §GEN-2, §GEN-6, §GEN-9, §DAT-1, §D
 
 ## Change 02 — `pedidos-core`
 
-**CU-04 / 07 / 09 / 19** · Complejidad alta · Criticidad sensible · **Apply en Claude Code** · audita `@security`
+**CU-04 / 07 / 09 / 19** · Complejidad alta · Criticidad sensible · **Routing inicial: Reasoning Agent** · audita `@security`
 
 ```
 /opsx-propose Quiero el change "02-pedidos-core" que cubre UC-04 (armar pedido), UC-07 (confirmar pedido), UC-09 (cancelar pedido pre-preparación) y UC-19 (cancelar o marcar fallido desde el staff), en su capa de dominio.
@@ -381,7 +381,7 @@ Restricciones: .instructions.md §Vocabulario de estados, §GEN-1, §GEN-2, §GE
 
 ## Change 03 — `conversacion`
 
-**CU-01 / 12** · Complejidad alta · Criticidad sensible · **Apply en Claude Code** · audita `@security`
+**CU-01 / 12** · Complejidad alta · Criticidad sensible · **Routing inicial: Reasoning Agent** · audita `@security`
 
 ```
 /opsx-propose Quiero el change "03-conversacion" que cubre UC-01 (iniciar conversación y menú principal) y UC-12 (expirar carrito y resetear sesión).
@@ -440,7 +440,7 @@ Restricciones: .instructions.md §Vocabulario de estados, §GEN-1, §GEN-4, §GE
 
 ## Change 04 — `flujo-pedido-wa`
 
-**CU-04 a CU-08** · Complejidad alta · Criticidad normal · **Apply en Claude Code** · sin auditoría
+**CU-04 a CU-08** · Complejidad alta · Criticidad normal · **Routing inicial: Reasoning Agent** · sin auditoría
 
 ```
 /opsx-propose Quiero el change "04-flujo-pedido-wa" que cubre UC-04 (armar pedido), UC-05 (modificar), UC-06 (datos de entrega), UC-07 (confirmar) y UC-08 (consultar estado) del lado de la conversación por WhatsApp.
@@ -493,7 +493,7 @@ Restricciones: .instructions.md §GEN-1, §GEN-9, §CONV-1, §CONV-3, §CONV-4, 
 
 ## Change 05 — `reservas`
 
-**CU-R1 a CU-R5** · Complejidad media · Criticidad sensible · **Apply en Claude Code** · audita `@security`
+**CU-R1 a CU-R5** · Complejidad media · Criticidad sensible · **Routing inicial: Reasoning Agent** · audita `@security`
 
 ```
 /opsx-propose Quiero el change "05-reservas" que cubre UC-R1 (solicitar reserva), UC-R2 (consultar estado), UC-R3 (cancelar), UC-R4 (confirmar o rechazar del lado del staff, en su capa de dominio) y UC-R5 (escalar una reserva sin responder).
@@ -552,7 +552,7 @@ Restricciones: .instructions.md §Vocabulario de estados, §GEN-4, §GEN-6, §GE
 
 ## Change 06 — `notificacion-staff`
 
-**CU-11** · Complejidad media · Criticidad normal · **Apply en OpenCode** · sin auditoría
+**CU-11** · Complejidad media · Criticidad normal · **Routing inicial: OpenCode** · sin auditoría
 
 ```
 /opsx-propose Quiero el change "06-notificacion-staff" que cubre UC-11 (persistir la operación y avisar al staff).
@@ -601,7 +601,7 @@ Restricciones: .instructions.md §GEN-1, §GEN-2, §GEN-4, §DAT-2, §DAT-6, §C
 
 ## Change 07 — `bordes`
 
-**CU-10 / 13 / 14 / 20** · Complejidad media · Criticidad normal · **Apply en OpenCode** · sin auditoría
+**CU-10 / 13 / 14 / 20** · Complejidad media · Criticidad normal · **Routing inicial: OpenCode** · sin auditoría
 
 ```
 /opsx-propose Quiero el change "07-bordes" que cubre UC-10 (hablar con una persona), UC-13 (local cerrado), UC-14 (validar zona de delivery) y UC-20 (reactivar el bot tras el handoff).
@@ -655,7 +655,7 @@ Restricciones: .instructions.md §GEN-6, §GEN-7, §GEN-8, §CONV-1, §CONV-3, �
 
 ## Change 08 — `panel`
 
-**CU-15 / 16 / R4** · Complejidad media · Criticidad sensible · **Apply en Claude Code** · audita `@security`
+**CU-15 / 16 / R4** · Complejidad media · Criticidad sensible · **Routing inicial: Reasoning Agent** · audita `@security`
 
 ```
 /opsx-propose Quiero el change "08-panel" que cubre UC-15 (ver pedidos y reservas entrantes), UC-16 (cambiar estado del pedido y notificar al cliente) y UC-R4 (confirmar o rechazar reserva), más las pantallas de UC-17, UC-18 y UC-20, y el aviso al staff en el navegador.
@@ -714,7 +714,7 @@ Restricciones: .instructions.md §GEN-3, §GEN-4, §GEN-7, §DAT-1, §PAN-1 a §
 
 ## Change 09 — `hardening`
 
-**Complejidad media** · Criticidad normal · **Apply en OpenCode** · sin auditoría
+**Complejidad media** · Criticidad normal · **Routing inicial: OpenCode** · sin auditoría
 
 ```
 /opsx-propose Quiero el change "09-hardening" que cierra el MVP para que pueda correr en la casa de un cliente real sin que nosotros estemos mirando.
@@ -890,7 +890,7 @@ Secciones:
    - SDD con OpenSpec: el ciclo, y por qué la revisión humana de la spec no se delega.
    - Las skills, qué reglas hace cumplir cada una.
    - Los subagentes y por qué son read-only.
-   - La matriz OpenCode vs Claude Code y el criterio de ruteo por complejidad del apply.
+   - La matriz OpenCode vs Reasoning Agent y el criterio de ruteo por complejidad del apply.
    - Los loops de run-verify: con ejemplos CONCRETOS sacados de la bitácora de qué corrigieron.
 6. Los MCP configurados, con el rol de cada uno en el flujo.
 7. Instalación desde cero: de repo clonado a instancia andando.
@@ -905,23 +905,27 @@ Si algo de lo que te pido no está en la bitácora, decímelo en vez de completa
 
 # Orden completo, de un vistazo
 
-| Paso   | Qué                        | Herramienta | Audita      |
-| ------ | -------------------------- | ----------- | ----------- |
-| P0.1   | Saneamiento y constitución | Claude Code | —           |
-| P0.2   | Toolchain y esqueleto      | Claude Code | —           |
-| P0.3   | `openspec init`            | Terminal    | —           |
-| P0.4   | CI sobre el PR             | OpenCode    | —           |
-| P0.5   | Sanity check               | Ambas       | —           |
-| 00     | `walking-skeleton`         | Claude Code | `@security` |
-| 01     | `cimientos-datos`          | OpenCode    | —           |
-| 02     | `pedidos-core`             | Claude Code | `@security` |
-| 03     | `conversacion`             | Claude Code | `@security` |
-| 04     | `flujo-pedido-wa`          | Claude Code | —           |
-| 05     | `reservas`                 | Claude Code | `@security` |
-| 06     | `notificacion-staff`       | OpenCode    | —           |
-| 07     | `bordes`                   | OpenCode    | —           |
-| 08     | `panel`                    | Claude Code | `@security` |
-| 09     | `hardening`                | OpenCode    | —           |
-| Cierre | Auditoría final + README   | Ambas       | `@security` |
+| Paso   | Qué                        | Routing inicial | Audita      |
+| ------ | -------------------------- | --------------- | ----------- |
+| P0.1   | Saneamiento y constitución | Reasoning Agent | —           |
+| P0.2   | Toolchain y esqueleto      | Reasoning Agent | —           |
+| P0.3   | `openspec init`            | Terminal        | —           |
+| P0.4   | CI sobre el PR             | OpenCode        | —           |
+| P0.5   | Sanity check               | Ambas           | —           |
+| 00     | `walking-skeleton`         | Reasoning Agent | `@security` |
+| 01     | `cimientos-datos`          | OpenCode        | —           |
+| 02     | `pedidos-core`             | Reasoning Agent | `@security` |
+| 03     | `conversacion`             | Reasoning Agent | `@security` |
+| 04     | `flujo-pedido-wa`          | Reasoning Agent | —           |
+| 05     | `reservas`                 | Reasoning Agent | `@security` |
+| 06     | `notificacion-staff`       | OpenCode        | —           |
+| 07     | `bordes`                   | OpenCode        | —           |
+| 08     | `panel`                    | Reasoning Agent | `@security` |
+| 09     | `hardening`                | OpenCode        | —           |
+| Cierre | Auditoría final + README   | Ambas           | `@security` |
+
+El routing de esta tabla es un punto de partida. Antes de implementar cada task,
+se reevalúa con los criterios de `AI_WORKFLOW.md`; no obliga a usar la misma
+herramienta ni el mismo nivel de razonamiento durante todo el change.
 
 **En cada change, el mismo ciclo:** propose → 🛑 **revisás la spec** → apply → verificación funcional → auditoría si es sensible → PR y merge → archive → `update-estado` y bitácora.
