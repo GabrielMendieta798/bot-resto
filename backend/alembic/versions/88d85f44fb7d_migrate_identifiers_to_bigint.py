@@ -5,17 +5,17 @@ Revises: 7c9704c6ace0
 Create Date: 2026-09-26 22:51:48.718619
 
 """
-from typing import Sequence, Union
+from collections.abc import Sequence
 
-from alembic import op
 import sqlalchemy as sa
 
+from alembic import op
 
 # revision identifiers, used by Alembic.
-revision: str = '88d85f44fb7d'
-down_revision: Union[str, Sequence[str], None] = '7c9704c6ace0'
-branch_labels: Union[str, Sequence[str], None] = None
-depends_on: Union[str, Sequence[str], None] = None
+revision: str = "88d85f44fb7d"
+down_revision: str | Sequence[str] | None = "7c9704c6ace0"
+branch_labels: str | Sequence[str] | None = None
+depends_on: str | Sequence[str] | None = None
 
 
 INTEGER_MIN = -(2**31)
@@ -63,8 +63,7 @@ def upgrade() -> None:
     op.alter_column('conversations', 'id',
                existing_type=sa.INTEGER(),
                type_=sa.BigInteger(),
-               existing_nullable=False,
-               autoincrement=True)
+               existing_nullable=False)
     op.alter_column('conversations', 'customer_id',
                existing_type=sa.INTEGER(),
                type_=sa.BigInteger(),
@@ -76,18 +75,15 @@ def upgrade() -> None:
     op.alter_column('customers', 'id',
                existing_type=sa.INTEGER(),
                type_=sa.BigInteger(),
-               existing_nullable=False,
-               autoincrement=True)
+               existing_nullable=False)
     op.alter_column('menu_items', 'id',
                existing_type=sa.INTEGER(),
                type_=sa.BigInteger(),
-               existing_nullable=False,
-               autoincrement=True)
+               existing_nullable=False)
     op.alter_column('order_items', 'id',
                existing_type=sa.INTEGER(),
                type_=sa.BigInteger(),
-               existing_nullable=False,
-               autoincrement=True)
+               existing_nullable=False)
     op.alter_column('order_items', 'order_id',
                existing_type=sa.INTEGER(),
                type_=sa.BigInteger(),
@@ -99,8 +95,7 @@ def upgrade() -> None:
     op.alter_column('orders', 'id',
                existing_type=sa.INTEGER(),
                type_=sa.BigInteger(),
-               existing_nullable=False,
-               autoincrement=True)
+               existing_nullable=False)
     op.alter_column('orders', 'customer_id',
                existing_type=sa.INTEGER(),
                type_=sa.BigInteger(),
@@ -108,8 +103,7 @@ def upgrade() -> None:
     op.alter_column('reservations', 'id',
                existing_type=sa.INTEGER(),
                type_=sa.BigInteger(),
-               existing_nullable=False,
-               autoincrement=True)
+               existing_nullable=False)
     op.alter_column('reservations', 'customer_id',
                existing_type=sa.INTEGER(),
                type_=sa.BigInteger(),
@@ -129,8 +123,7 @@ def downgrade() -> None:
     op.alter_column('reservations', 'id',
                existing_type=sa.BigInteger(),
                type_=sa.INTEGER(),
-               existing_nullable=False,
-               autoincrement=True)
+               existing_nullable=False)
     op.alter_column('orders', 'customer_id',
                existing_type=sa.BigInteger(),
                type_=sa.INTEGER(),
@@ -138,8 +131,7 @@ def downgrade() -> None:
     op.alter_column('orders', 'id',
                existing_type=sa.BigInteger(),
                type_=sa.INTEGER(),
-               existing_nullable=False,
-               autoincrement=True)
+               existing_nullable=False)
     op.alter_column('order_items', 'menu_item_id',
                existing_type=sa.BigInteger(),
                type_=sa.INTEGER(),
@@ -151,18 +143,15 @@ def downgrade() -> None:
     op.alter_column('order_items', 'id',
                existing_type=sa.BigInteger(),
                type_=sa.INTEGER(),
-               existing_nullable=False,
-               autoincrement=True)
+               existing_nullable=False)
     op.alter_column('menu_items', 'id',
                existing_type=sa.BigInteger(),
                type_=sa.INTEGER(),
-               existing_nullable=False,
-               autoincrement=True)
+               existing_nullable=False)
     op.alter_column('customers', 'id',
                existing_type=sa.BigInteger(),
                type_=sa.INTEGER(),
-               existing_nullable=False,
-               autoincrement=True)
+               existing_nullable=False)
     op.alter_column('conversations', 'current_order_id',
                existing_type=sa.BigInteger(),
                type_=sa.INTEGER(),
@@ -174,6 +163,5 @@ def downgrade() -> None:
     op.alter_column('conversations', 'id',
                existing_type=sa.BigInteger(),
                type_=sa.INTEGER(),
-               existing_nullable=False,
-               autoincrement=True)
+               existing_nullable=False)
     # ### end Alembic commands ###
