@@ -2,11 +2,7 @@
 
 Snapshot del proyecto entre sesiones. Se actualiza con la skill `update-estado` al cerrar cada change y cada sesión (`SDD-5`).
 
-<<<<<<< HEAD
 **Última actualización:** 11/10/2026 — `migrate-identifiers-to-bigint` implementado y verificado; pendiente de archive/PR
-=======
-**Última actualización:** 10/10/2026 — `add-menu-and-customer-repositories` completo (17/17 tareas) y archivado en su rama; falta push, PR y merge
->>>>>>> origin/develop
 
 > **Hueco conocido:** entre el 19/09 y el 02/10 hubo sesiones que no actualizaron este archivo (inicialización de OpenSpec, tres changes propuestos, cuatro migraciones, PRs #15 a #19). Lo de ese período que no se pudo verificar en el repo figura como `ESTADO DESCONOCIDO`.
 
@@ -14,23 +10,15 @@ Snapshot del proyecto entre sesiones. Se actualiza con la skill `update-estado` 
 
 ## Snapshot
 
-<<<<<<< HEAD
-Fase actual: **esqueleto de la aplicación archivado y migración de identificadores a BIGINT verificada.** La app levanta; todavía ningún caso de uso.
-=======
-Fase actual: **capa de dominio de menú y customers implementada y archivada** (`add-menu-and-customer-repositories`, archivado el 10/10 en su rama, sin merge). Existe la capa de datos y servicios de UC-03, UC-17 y UC-18 y la identificación de customers por teléfono; todavía no hay endpoints, pantallas ni guion de WhatsApp que la usen.
->>>>>>> origin/develop
+Fase actual: **capa de dominio de menú y customers archivada e integrada, y migración de identificadores a BIGINT verificada.** Existe la capa de datos y servicios de UC-03, UC-17 y UC-18 y la identificación de customers por teléfono; todavía no hay endpoints, pantallas ni guion de WhatsApp que la usen.
 
-- Repo: `GabrielMendieta798/bot-resto`. Flujo por PR vía `develop` (PRs #15 a #23 mergeados; `develop` y `main` en `4bc1c24`). Ramas `change/<slug>`.
-- OpenSpec inicializado. Changes activos: **3** (`add-whatsapp-message-idempotency`, `allow-order-additions`, `migrate-identifiers-to-bigint`, sin tocar). Archivados: **2** (`add-application-skeleton`, `add-menu-and-customer-repositories`). Main specs en `openspec/specs/`: 9 capabilities. Los nombres no siguen la numeración 00–09 del plan de `AI_WORKFLOW.md`; la correspondencia es `ESTADO DESCONOCIDO`.
+- Repo: `GabrielMendieta798/bot-resto`. Flujo por PR vía `develop`; `add-menu-and-customer-repositories` fue integrado mediante el PR #24 y `migrate-identifiers-to-bigint` sigue pendiente de PR. Ramas `change/<slug>`.
+- OpenSpec inicializado. Changes activos: **3** (`add-whatsapp-message-idempotency`, `allow-order-additions`, `migrate-identifiers-to-bigint`; los dos primeros, sin tocar). Archivados: **2** (`add-application-skeleton`, `add-menu-and-customer-repositories`). Main specs en `openspec/specs/`: 9 capabilities. Los nombres no siguen la numeración 00–09 del plan de `AI_WORKFLOW.md`; la correspondencia es `ESTADO DESCONOCIDO`.
 - **`add-application-skeleton`:** archivado el 03/10 (40/40 tareas). Último `run-verify` en verde el 03/10: ruff, format, mypy estricto, 92 tests unitarios y 1 de integración. `@security`: tercera pasada sin medios ni altos. Llegó a `main` en los PRs #20 a #23.
-<<<<<<< HEAD
-- **`migrate-identifiers-to-bigint`:** apply completo el 11/10 (18/18 tareas), todavía activo y pendiente de archive/PR. Las 12 columnas PK/FK y las 6 secuencias usan BIGINT; upgrade, integridad y downgrade fueron verificados contra PostgreSQL real.
-- Base local de desarrollo: PostgreSQL 16.15 en el host, base `bot_resto`. Los tests destructivos de migración usan exclusivamente `bot_resto_test`, propiedad de `bot_resto_user`, y reinician su esquema antes y después de cada escenario.
-=======
-- **`add-menu-and-customer-repositories`:** 17/17 tareas y archivado el 10/10, en la rama `change/add-menu-and-customer-repositories` (sin push ni PR). El archive creó las main specs `customer-registry`, `domain-data-boundary` y `menu-catalog`. Corresponde a `01-cimientos-datos` más la porción `Customer` de `02-pedidos-core`; Lautaro aprobó adelantarlo antes del `00` (`SDD-6`, orden registrado en PENDIENTES). Último `run-verify` en verde el 10/10: ruff, format, mypy estricto (35 archivos), 242 tests unitarios y 34 de integración. Auditoría: `/security-review` y un subagente independiente de solo lectura, 0 altos, 0 medios, 6 bajos (D-24 a D-29).
+- **`add-menu-and-customer-repositories`:** 17/17 tareas, archivado el 10/10 e integrado mediante el PR #24. El archive creó las main specs `customer-registry`, `domain-data-boundary` y `menu-catalog`. Corresponde a `01-cimientos-datos` más la porción `Customer` de `02-pedidos-core`; Lautaro aprobó adelantarlo antes del `00` (`SDD-6`, orden registrado en PENDIENTES). Último `run-verify` en verde el 10/10: ruff, format, mypy estricto (35 archivos), 242 tests unitarios y 34 de integración. Auditoría: `/security-review` y un subagente independiente de solo lectura, 0 altos, 0 medios, 6 bajos (D-24 a D-29).
 - **No hay carga inicial del menú:** el alta y la baja de items son non-goal de ese change. Hoy los items solo se insertan a mano o desde fixtures de test.
-- Base local de desarrollo: contenedor `bot-resto-db` (`postgres:16`, puerto 5433, collation `en_US.utf8`). Los tests de integración corren contra ella y no dejan filas. El `.env` local se armó el 10/10 con las variables `POSTGRES_*` del contenedor; no se commitea.
->>>>>>> origin/develop
+- **`migrate-identifiers-to-bigint`:** apply completo el 11/10 (18/18 tareas), todavía activo y pendiente de archive/PR. Las 12 columnas PK/FK y las 6 secuencias usan BIGINT; upgrade, integridad y downgrade fueron verificados contra PostgreSQL real.
+- Base local de desarrollo: PostgreSQL 16, base `bot_resto`. Los tests normales usan la base configurada y revierten sus datos; los tests destructivos de migración usan exclusivamente `bot_resto_test`, propiedad de `bot_resto_user`, y reinician su esquema antes y después de cada escenario.
 - La app ya levanta: `uv run uvicorn app.main:app` desde `backend/`. Exige `APP_ENV` en el `.env`.
 
 ## Hecho
@@ -42,26 +30,17 @@ Fase actual: **capa de dominio de menú y customers implementada y archivada** (
 - [x] 3 subagentes read-only: `@security`, `@test-writer`, `@api-explorer`
 - [ ] Playbook de prompts (Fase C) — `PLAYBOOK.md` existe; si la Fase C se dio por cerrada es `ESTADO DESCONOCIDO`
 - [x] `add-application-skeleton` — archivado el 03/10/2026 (PRs #20 a #23)
-<<<<<<< HEAD
+- [x] `add-menu-and-customer-repositories` — archivado el 10/10/2026 e integrado mediante el PR #24
 - [x] `migrate-identifiers-to-bigint` — implementación y verificación completas el 11/10/2026; archive/PR pendientes
 
 ## Próximo paso
 
-1. Revisar el diff de `migrate-identifiers-to-bigint`, preparar su PR y archivarlo únicamente después del merge y de confirmar nuevamente el estado verde.
+1. Revisar el diff de `migrate-identifiers-to-bigint`, preparar su PR y archivarlo después de confirmar nuevamente el estado verde.
 2. Elegir cuál de los otros dos changes activos sigue (`add-whatsapp-message-idempotency` o `allow-order-additions`). El orden respecto del plan 00–09 (`SDD-6`) sigue como `ESTADO DESCONOCIDO`: confirmarlo antes de arrancar.
-3. El primer change que exponga el webhook arrastra las deudas D-12 a D-14 (D-14 es Media y va **antes** de exponerlo).
-=======
-- [x] `add-menu-and-customer-repositories` — archivado el 10/10/2026 en su rama (falta PR y merge)
-
-## Próximo paso
-
-1. **Cerrar `add-menu-and-customer-repositories`:** push de la rama, PR a `develop` y merge. El archive ya está hecho en la rama, como en `add-application-skeleton`.
-2. **Elegir el próximo change** según el orden registrado en PENDIENTES (`SDD-6`). Changes activos sin tocar: `add-whatsapp-message-idempotency`, `allow-order-additions`, `migrate-identifiers-to-bigint`.
 3. **Antes del change de pedidos:** D-21 (`NOT NULL` de `estimated_time_min`, `ORD-12`) es prerrequisito.
 4. **El primer change que exponga el webhook** arrastra D-12 a D-14 (D-14 es Media y va **antes** de exponerlo), D-25 y D-32.
 5. **El change del panel** arrastra D-18, D-19 y D-22.
 6. **Carga inicial del menú:** no existe; hace falta un change propio antes de que el bot pueda mostrar un menú real.
->>>>>>> origin/develop
 
 ## Bloqueantes
 
@@ -144,10 +123,6 @@ Fase actual: **capa de dominio de menú y customers implementada y archivada** (
 | 03/10 | **`UnhandledErrorMiddleware` en lugar del handler de `Exception`** | Con el handler, Starlette re-levanta la excepción y uvicorn la vuelve a loguear completa, con datos del cliente. Reproducido con uvicorn real y un `IntegrityError` con dirección: dos records con la dirección; después del arreglo, uno y sin la dirección |
 | 03/10 | Errores de SQLAlchemy y de validación (en cualquier eslabón de la cadena) se loguean sin mensaje; el resto de las excepciones conserva su mensaje | Sin mensajes se depura a ciegas. Se descartó la alternativa estricta (ningún mensaje) y se agregó a la spec de `structured-logging` el requirement "Exception messages carry no customer data", para que los próximos changes se enteren y `@security` lo revise |
 | 03/10 | Los tests de rutas recorren nuestros routers + el esquema OpenAPI, no `app.routes` | FastAPI 0.142 envuelve los routers incluidos en `_IncludedRouter`, privado; depender de él rompería con cualquier actualización |
-<<<<<<< HEAD
-| 11/10 | PK, FK y secuencias internas existentes usan PostgreSQL `BIGINT`; Python conserva `int` | Evita agotar `INTEGER` y una migración más costosa con tablas grandes. El costo es más espacio por clave e índice y locks durante el cambio de tipo |
-| 11/10 | Los tests destructivos de Alembic usan `bot_resto_test`, no la base de desarrollo | Permite probar upgrade y downgrade reales sin darle `CREATEDB` al rol de la aplicación ni arriesgar datos de `bot_resto` |
-=======
 | 10/10 | **Lectura estricta de `GEN-1`**: los repositorios viven en `backend/app/db/repositories/`, fuera del dominio; nada bajo `backend/app/domain/` importa SQLAlchemy, `app.models` ni `app.db` | `D-5` ya nombraba `db/` como destino. Sin excepciones por archivo, el test de AST puede recorrer todo el paquete `domain`, incluidos los módulos de changes futuros |
 | 10/10 | **Quien abre la transacción la cierra**: los repositorios pueden hacer flush, nunca commit ni rollback; los servicios no ven la `Session` | `CONV-10`: el `INSERT` de idempotencia y todo el efecto del mensaje van en una única transacción. Si un repositorio commiteara, un fallo posterior dejaría efectos con la marca de idempotencia revertida |
 | 10/10 | **Criterio de validación**: forma (Pydantic) = tipo, largo, nulidad y campos desconocidos; reglas (servicio) = límites de valor y de negocio | Precedente para `orders` y `reservations`. Separa el `ValidationError` (camino del contrato de errores) del `InvalidInputError` del dominio sin zonas grises |
@@ -155,11 +130,12 @@ Fase actual: **capa de dominio de menú y customers implementada y archivada** (
 | 10/10 | **`set_available` explícito, no toggle** (interpretación de `DAT-5`) | Un toggle no es idempotente: dos clics en "agotado" dejarían el plato disponible. Ajuste de redacción de la regla pendiente (D-23) |
 | 10/10 | **Precio y tiempo estimado aceptan texto exacto** (`"9200.00"`, `"25"`); `float` y `bool` siempre rechazados | FastAPI valida el payload en modo Python después de `json.loads` y los formularios HTMX mandan texto: con `strict` puro ningún request podía traer un precio (encontrado en el apply, `SDD-2`). `DAT-8` se mantiene: un número binario nunca se convierte en dinero |
 | 10/10 | Conformidad de los repositorios con su `Protocol` chequeada en el propio módulo (`_x: type[MenuRepository] = SqlMenuRepository`) | mypy solo revisa `backend/app`; una asignación tipada en `tests/` no la habría chequeado nadie |
->>>>>>> origin/develop
+| 11/10 | PK, FK y secuencias internas existentes usan PostgreSQL `BIGINT`; Python conserva `int` | Evita agotar `INTEGER` y una migración más costosa con tablas grandes. El costo es más espacio por clave e índice y locks durante el cambio de tipo |
+| 11/10 | Los tests destructivos de Alembic usan `bot_resto_test`, no la base de desarrollo | Permite probar upgrade y downgrade reales sin darle `CREATEDB` al rol de la aplicación ni arriesgar datos de `bot_resto` |
 
 ## Changes archivados
 
 | Fecha | Change | PRs | Notas |
 |---|---|---|---|
 | 03/10/2026 | `add-application-skeleton` | #20, #21, #22, #23 | En `openspec/changes/archive/2026-10-03-add-application-skeleton/`. Creó las 6 primeras main specs: `application-runtime`, `development-toolchain`, `error-contract`, `outbound-http-client`, `runtime-configuration`, `structured-logging` |
-| 10/10/2026 | `add-menu-and-customer-repositories` | pendiente | En `openspec/changes/archive/2026-10-10-add-menu-and-customer-repositories/`. Creó las main specs `customer-registry`, `domain-data-boundary` y `menu-catalog`. Archivado en la rama, antes del PR |
+| 10/10/2026 | `add-menu-and-customer-repositories` | #24 | En `openspec/changes/archive/2026-10-10-add-menu-and-customer-repositories/`. Creó las main specs `customer-registry`, `domain-data-boundary` y `menu-catalog` |

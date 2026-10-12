@@ -52,7 +52,6 @@ def _fresh_config_and_logging() -> Iterator[None]:
     root.setLevel(saved_level)
 
 
-<<<<<<< HEAD
 @pytest.fixture
 def migration_database_url(monkeypatch: pytest.MonkeyPatch) -> Iterator[URL]:
     """Run destructive migration tests only against a dedicated test database."""
@@ -115,7 +114,8 @@ def _reset_migration_database(database_url: str, expected_database: str) -> None
             "first and make the DATABASE_URL role its owner.",
             pytrace=False,
         )
-=======
+
+
 @pytest.fixture(scope="session")
 def db_engine(database_available: None) -> Iterator[Engine]:
     engine = build_engine(load_config().settings)
@@ -233,4 +233,3 @@ def make_order_line(db_session: Session, phone: str) -> Callable[[int, str], int
         )
 
     return make
->>>>>>> origin/develop
